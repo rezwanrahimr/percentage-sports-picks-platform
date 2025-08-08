@@ -2,71 +2,96 @@ import bcrypt from 'bcrypt';
 import config from '../../config';
 import authUtill from './auth.utill';
 import { UserModel } from '../user/user.model';
-import idConverter from '../../util/idConvirter';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { sendEmail } from '../../util/sendEmail';
 import userServices from '../user/user.service';
+import { OAuth2Client } from 'google-auth-library';
+import appleSignin from "apple-signin-auth";
+import VerificationCodeModel from './verificationCode.model';
+
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const sendVerificationEmail = async (email: string) => {
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  const subject = "Your Email Verification Code";
+
+  const html = `
+    <div>
+      <h2>Email Verification</h2>
+      <p>Your code is:</p>
+      <p style="font-size: 24px; font-weight: bold;">${verificationCode}</p>
+      <p>This will expire in 10 minutes.</p>
+    </div>
+  `;
+
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+
+  // Upsert the verification code into MongoDB
+  await VerificationCodeModel.findOneAndUpdate(
+    { email },
+    { code: verificationCode, expiresAt },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+
+  const response = await sendEmail(email, subject, html);
+
+  return {
+    ...response
+  };
+}
+
 
 const logIn = async (
   email: string,
-  password: string,
-  method: 'google' | 'email_Pass' | 'facebook' = 'email_Pass',
+  code: string
 ) => {
-  let user = await UserModel.findOne({ email }).select('+password');
+  let user = await UserModel.findOne({ email });
+  let verificationCode = await VerificationCodeModel.find({ email, code });
 
-  // console.log("user is",user)
+  console.log("verificationCode is", verificationCode);
 
- 
-  if ((user?.isBlocked || user?.isDeleted || !user) && (method === 'google' || method === 'facebook')) {
-    // Optional: archive/rename old user, or just ignore
+  if (verificationCode?.[0].expiresAt && verificationCode[0].expiresAt < new Date()) {
+    throw new Error('This verification code has expired');
+  } else {
 
-    // Register a fresh user
-    await userServices.createUser(
-      {
-        email,
-        aggriedToTerms: true,
-      },
-      method,
-    );
+    if (!verificationCode || verificationCode.length === 0) {
+      throw new Error('Invalid verification code');
+    }
 
-    // Re-fetch new user
-    user = await UserModel.findOne({ email }).select('+password');
+  }
 
-    if (!user) {
-      throw new Error('User creation failed');
+  if (!user && verificationCode.length > 0) {
+    const newUserResponse = await userServices.createUser({
+      email,
+      name: email.split('@')[0],
+      provider: 'email',
+      isNotificationEnabled: true,
+      isLoggedIn: true
+    }, 'email');
+
+
+    if (!newUserResponse.data) {
+      throw new Error(newUserResponse.message || 'User creation failed');
+    }
+
+
+    user = newUserResponse.data;
+  } else {
+    if (user) {
+      user.isLoggedIn = true;
+      await user.save();
     }
   }
 
-  // If still no user (and not a social login), throw error
-  if (!user) {
-    throw new Error('No user found with this email');
-  }
-
-  // Deny login for blocked/deleted users for normal email login
-  if ((user.isBlocked || user.isDeleted) && method === 'email_Pass') {
-    throw new Error('This user is blocked or deleted');
-  }
-
-  // Password check for email login
-  if (method === 'email_Pass') {
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      throw new Error('Password is not matched');
-    }
-  }
-
-
-  const updatedUser = await UserModel.findOneAndUpdate(
-    { email },
-    { isLoggedIn: true },
-    { new: true },
-  );
 
 
   const tokenizeData = {
-    id: user._id.toHexString(),
-    role: user.role,
-    username: updatedUser?.name,
+    id: user?._id.toHexString(),
+    role: user?.role,
+    username: user?.name,
   };
 
   const approvalToken = authUtill.createToken(
@@ -81,243 +106,108 @@ const logIn = async (
     config.rifresh_expairsIn,
   );
 
-  return { approvalToken, refreshToken, updatedUser };
+  return { approvalToken, refreshToken, updatedUser: user };
 };
 
 
-const logOut = async (userId: string) => {
-  const convertedId = idConverter(userId);
+const googleLogin = async (idToken: string) => {
 
-  const findUserById = await UserModel.findOneAndUpdate(
-    { _id: convertedId },
-    { isLoggedIn: false, loggedOutTime: new Date() },
-    { new: true },
-  );
-  return findUserById;
-};
-
-const changePassword = async (
-  authorizationToken: string,
-  oldPassword: string,
-  newPassword: string,
-) => {
-  try {
-    // Decode the token
-    const decoded = jwt.verify(
-      authorizationToken,
-      config.jwt_token_secret as string,
-    ) as JwtPayload;
-
-    if (!decoded || !decoded.id) {
-      throw new Error('Invalid or unauthorized token');
-    }
-
-    const userId = decoded.id;
-
-    // Find the user and include the password field
-    const findUser = await UserModel.findOne({ _id: userId })
-      .select('+password')
-      .lean(); // Convert to a plain object for performance
-
-    if (!findUser || !findUser.password) {
-      throw new Error('User not found or password missing');
-    }
-
-    // Compare old password with hashed password
-    const isPasswordMatch = await bcrypt.compare(
-      oldPassword,
-      findUser.password,
-    );
-
-    if (!isPasswordMatch) {
-      throw new Error('Old password is incorrect');
-    }
-
-    // Hash the new password
-    const newPasswordHash = await bcrypt.hash(
-      newPassword,
-      Number(config.bcrypt_salt),
-    );
-
-    // Update the password
-    const updatedUser = await UserModel.findOneAndUpdate(
-      { _id: userId },
-      {
-        password: newPasswordHash,
-        passwordChangeTime: new Date(),
-      },
-      { new: true },
-    );
-
-    if (!updatedUser) {
-      throw new Error('Error updating password');
-    }
-
-    return { success: true, message: 'Password changed successfully' };
-  } catch (error: any) {
-    console.error('Error changing password:', error.message);
-    throw new Error(error.message || 'Something went wrong');
-  }
-};
-
-const refreshToken = async (refreshToken: string) => {
-  const decoded = jwt.verify(
-    refreshToken,
-    config.jwt_refresh_Token_secret as string,
-  );
-
-  if (!decoded) {
-    throw Error('tocan decodaing Failed');
-  }
-
-  const { id, iat, role } = decoded as JwtPayload;
-
-  const findUser = await UserModel.findOne({
-    _id: id,
-    isDelited: false,
+  const ticket = await client.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
   });
 
-  if (!findUser) {
-    throw Error('Unauthorised User or forbitten Access');
+  const payload = ticket.getPayload();
+  if (!payload) {
+    throw new Error('Invalid Google token payload');
   }
+  const { email, sub, name, picture } = payload;
 
-  // console.log(findUser)
-  if ((findUser.passwordChangeTime || findUser.loggedOutTime) && iat) {
-    const passwordChangedAt = findUser.passwordChangeTime
-      ? new Date(findUser.passwordChangeTime).getTime() / 1000
-      : null;
-
-    const logOutTimedAt = findUser.loggedOutTime
-      ? new Date(findUser.loggedOutTime).getTime() / 1000
-      : null;
-
-    if (
-      (passwordChangedAt && passwordChangedAt > iat) ||
-      (logOutTimedAt && logOutTimedAt > iat)
-    ) {
-      throw Error('Unauthorized User: Try logging in again');
-    }
-  }
-
-  const JwtPayload = {
-    id: findUser.id,
-    role: role,
-  };
-  const approvalToken = authUtill.createToken(
-    JwtPayload,
-    config.jwt_token_secret as string,
-    config.token_expairsIn as string,
-  );
-
-  return {
-    approvalToken,
-  };
-};
-
-const forgetPassword = async (email: string) => {
-  const user = await UserModel.findOne({ email });
+  let user = await UserModel.findOne({ email });
 
   if (!user) {
-    throw new Error('User not found with this email');
-  }
-
-  if (user.isDeleted) {
-    throw new Error('This user is deleted. This function is not available.');
+    user = await UserModel.create({
+      name,
+      email,
+      provider: 'google',
+      providerId: sub,
+      img: picture
+    });
   }
 
   const tokenizeData = {
-    id: user._id,
+    id: user._id.toHexString(),
     role: user.role,
+    username: user.name,
   };
 
-  const resetToken = authUtill.createToken(
+  const approvalToken = authUtill.createToken(
     tokenizeData,
-    config.jwt_token_secret as string,
-    config.token_expairsIn as string
+    config.jwt_token_secret,
+    config.token_expairsIn,
   );
 
-  const resetLink = `${config.FrontEndHostedPort}?id=${user._id}&token=${resetToken}`;
+  const refreshToken = authUtill.createToken(
+    tokenizeData,
+    config.jwt_refresh_Token_secret,
+    config.rifresh_expairsIn,
+  );
 
-  const passwordResetHtml = `
-    <div>
-      <p>Dear User,</p>
-      <p>Click the button below to reset your password. This link expires in 10 minutes.</p> 
-      <p>
-          <a href="${resetLink}" target="_blank">
-              <button style="padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;">
-                  Reset Password
-              </button>
-          </a>
-      </p>
-    </div>
-  `;
+  return { approvalToken, refreshToken, updatedUser: user };
 
-  const emailResponse = await sendEmail(user.email, 'Reset Your Password', passwordResetHtml);
+}
 
-  if (emailResponse.success) {
-    return {
-      success: true,
-      message: '✅ Check your email for the reset password link.',
-      emailSentTo: emailResponse.accepted,
-      resetLink,
-    };
-  } else {
-    return {
-      success: false,
-      message: '❌ Failed to send password reset email.',
-      error: emailResponse.error,
-    };
+const appleLogin = async (idToken: string) => {
+  const decoded = await appleSignin.verifyIdToken(idToken, {
+    audience: process.env.APPLE_CLIENT_ID,
+    ignoreExpiration: true
+  });
+
+  const { sub, email } = decoded;
+
+  let user = await UserModel.findOne({ email });
+
+  if (!user) {
+    user = await UserModel.create({
+      name: "",
+      email,
+      provider: "apple",
+      providerId: sub
+    });
   }
+
+  const tokenizeData = {
+    id: user._id.toHexString(),
+    role: user.role,
+    username: user.name,
+  };
+
+  const approvalToken = authUtill.createToken(
+    tokenizeData,
+    config.jwt_token_secret,
+    config.token_expairsIn,
+  );
+
+  const refreshToken = authUtill.createToken(
+    tokenizeData,
+    config.jwt_refresh_Token_secret,
+    config.rifresh_expairsIn,
+  );
+
+  return { approvalToken, refreshToken, updatedUser: user };
 };
 
-const resetPassword = async (
-  authorizationToken: string,
-  userId: string,
-  newPassword: string,
-) => {
-  // Decode the token
-  const decoded = jwt.verify(
-    authorizationToken,
-    config.jwt_token_secret as string,
-  ) as JwtPayload;
+const logOut = async (userId: string) => {
+  const user = await UserModel.findById(userId);
 
-  if (!decoded || !decoded.id) {
-    throw Error('Invalid or unauthorized token');
+  if (!user) {
+    throw new Error('User not found');
   }
 
-  const { id } = decoded;
-  if (id === userId) {
-    // Find the user and include the password field
-    const findUser = await UserModel.findOne({ _id: id }).select('+password');
+  // Perform logout operations (e.g., invalidate tokens, update user status)
+  await UserModel.findByIdAndUpdate(userId, { isLoggedIn: false, loggedOutTime: new Date() });
 
-    if (!findUser || !findUser.password) {
-      throw Error('User not found or password missing');
-    }
-
-    // Hash the new password
-    const newPasswordHash = await bcrypt.hash(
-      newPassword,
-      Number(config.bcrypt_salt),
-    );
-
-    // Update the user's password and passwordChangeTime
-    const updatePassword = await UserModel.findOneAndUpdate(
-      { _id: id },
-      {
-        password: newPasswordHash,
-        passwordChangeTime: new Date(),
-      },
-      { new: true },
-    );
-
-    if (!updatePassword) {
-      throw Error('Error updating password');
-    }
-
-    return { passwordChanged: true };
-  } else {
-    throw Error('Invalid User');
-  }
+  return { success: true, message: 'Logged out successfully' };
 };
 
 const collectProfileData = async (id: string) => {
@@ -328,10 +218,9 @@ const collectProfileData = async (id: string) => {
 const authServices = {
   logIn,
   logOut,
-  changePassword,
-  refreshToken,
-  forgetPassword,
-  resetPassword,
   collectProfileData,
+  sendVerificationEmail,
+  googleLogin,
+  appleLogin
 };
 export default authServices;

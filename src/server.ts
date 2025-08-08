@@ -9,10 +9,11 @@ let server: Server;
 async function main() {
   try {
     console.log("connecting to mongodb....⏳");
+    console.log(`MONGOOSE_URI: ${config.mongoose_uri}`);
     await mongoose.connect(config.mongoose_uri);
     await adminSeeder()
     server = app.listen(config.port, () => {
-      console.log(`APP NAME server app listening on port ${config.port}`);
+      console.log(`RICH BOY server app listening on port ${config.port}`);
     });
   } 
   catch (err:any) {

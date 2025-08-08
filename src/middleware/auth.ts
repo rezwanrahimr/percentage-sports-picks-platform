@@ -16,7 +16,11 @@ const auth = (...requeredUserRole: TUserRole[]) => {
             throw new Error('Unauthorized User: Missing Authorization Token');
         }
 
+        console.log("authorizationToken is", authorizationToken);
+
         const decoded = authUtill.decodeAuthorizationToken(authorizationToken);
+
+        console.log("decoded is", decoded);
 
         if (!decoded) {
             throw new Error('Unauthorized User: Token decoding failed');
@@ -32,8 +36,7 @@ const auth = (...requeredUserRole: TUserRole[]) => {
         // Find the user in the database
         const findUser = await UserModel.findOne({
             _id:idConverter(id),
-            isLoggedIn:true,
-            isDeleted:false
+            isLoggedIn:true
         });
 
         if (!findUser) {
