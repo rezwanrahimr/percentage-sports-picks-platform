@@ -6,7 +6,7 @@ import auth from '../../middleware/auth';
 const userRoutes = express.Router();
 
 // create user route
-userRoutes.post('/create-user', userController.createUser);
+userRoutes.post('/create-user', auth(userRole.admin), userController.createUser);
 
 // update user
 userRoutes.put('/update-user/:id', auth(userRole.admin, userRole.user), userController.updateUser);
