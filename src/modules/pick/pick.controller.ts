@@ -132,6 +132,72 @@ const deleteLeague = catchAsync(async (req, res) => {
     });
 })
 
+
+/* teaser types */
+const createTeaserType = catchAsync(async (req, res) => {
+    const { title } = req.body;
+
+    const result = await pickServices.createTeaserType(title);
+    res.status(201).json({
+        success: true,
+        message: "Teaser type created successfully",
+        data: {
+            teaserType: result
+        }
+    });
+})
+
+const updateTeaserType = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { title } = req.body;
+
+    const result = await pickServices.updateTeaserType(id, title);
+    res.status(200).json({
+        success: true,
+        message: "Teaser type updated successfully",
+        data: {
+            teaserType: result
+        }
+    });
+})
+
+const getTeaserTypeById = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.getTeaserTypeById(id);
+    res.status(200).json({
+        success: true,
+        message: "Teaser type retrieved successfully",
+        data: {
+            teaserType: result
+        }
+    });
+})
+
+const getTeaserTypes = catchAsync(async (req, res) => {
+    const result = await pickServices.getTeaserTypes();
+    res.status(200).json({
+        success: true,
+        message: "Teaser types retrieved successfully",
+        data: {
+            teaserTypes: result
+        }
+    });
+})
+
+const deleteTeaserType = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.deleteTeaserType(id);
+    res.status(200).json({
+        success: true,
+        message: "Teaser type deleted successfully",
+        data: {
+            teaserType: result
+        }
+    });
+})
+
 const pickController = {
     createSportType,
     updateSportType,
@@ -142,7 +208,12 @@ const pickController = {
     updateLeague,
     getLeagueById,
     getLeagues,
-    deleteLeague
+    deleteLeague,
+    createTeaserType,
+    updateTeaserType,
+    getTeaserTypeById,
+    getTeaserTypes,
+    deleteTeaserType
 }
 
 export default pickController;

@@ -19,4 +19,11 @@ pickRoutes.get('/league/:id', auth(userRole.admin), pickController.getLeagueById
 pickRoutes.get('/leagues', auth(userRole.admin), pickController.getLeagues);
 pickRoutes.delete('/league/:id', auth(userRole.admin), pickController.deleteLeague);
 
+/* teaser types routes */
+pickRoutes.post('/teaser-type', auth(userRole.admin), pickController.createTeaserType);
+pickRoutes.put('/teaser-type/:id', auth(userRole.admin), pickController.updateTeaserType);
+pickRoutes.get('/teaser-type/:id', auth(userRole.admin), pickController.getTeaserTypeById);
+pickRoutes.get('/teaser-types', auth(userRole.admin), pickController.getTeaserTypes);
+pickRoutes.delete('/teaser-type/:id', auth(userRole.admin), pickController.deleteTeaserType);
+
 export default pickRoutes;

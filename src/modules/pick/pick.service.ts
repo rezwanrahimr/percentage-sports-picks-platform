@@ -1,5 +1,5 @@
 import idConverter from "../../util/idConvirter";
-import { LeagueModel, SportTypeModel } from "./pick.model"
+import { LeagueModel, SportTypeModel, TeaserTypeModel } from "./pick.model"
 
 /* sport type */
 const createSportType = async (title: string) => {
@@ -181,6 +181,96 @@ const deleteLeague = async (id: string) => {
     }
 }
 
+
+/* teaser types */
+const createTeaserType = async (title: string) => {
+    try {
+        const isExist = await TeaserTypeModel.findOne({ title });
+        if (isExist) {
+            throw new Error("Teaser type already exists");
+        }
+
+        const teaserType = await TeaserTypeModel.create({ title });
+        return teaserType;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while creating the teaser type");
+        } else {
+            throw new Error("An error occurred while creating the teaser type");
+        }
+    }
+}
+
+const updateTeaserType = async (id: string, title: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await TeaserTypeModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Teaser type does not exist");
+        }
+
+        const teaserType = await TeaserTypeModel.findByIdAndUpdate(idConvert, { title }, { new: false });
+        return teaserType;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while updating the teaser type");
+        } else {
+            throw new Error("An error occurred while updating the teaser type");
+        }
+    }
+}
+
+const getTeaserTypeById = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await TeaserTypeModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Teaser type does not exist");
+        }
+
+        const teaserType = await TeaserTypeModel.findById(idConvert);
+        return teaserType;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the teaser type");
+        } else {
+            throw new Error("An error occurred while retrieving the teaser type");
+        }
+    }
+}
+
+const getTeaserTypes = async () => {
+    try {
+        const teaserTypes = await TeaserTypeModel.find();
+        return teaserTypes;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the teaser types");
+        } else {
+            throw new Error("An error occurred while retrieving the teaser types");
+        }
+    }
+}
+
+const deleteTeaserType = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await TeaserTypeModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Teaser type does not exist");
+        }
+
+        const teaserType = await TeaserTypeModel.findByIdAndDelete(idConvert);
+        return teaserType;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while deleting the teaser type");
+        } else {
+            throw new Error("An error occurred while deleting the teaser type");
+        }
+    }
+}
+
 const pickServices = {
     createSportType,
     updateSportType,
@@ -191,7 +281,12 @@ const pickServices = {
     updateLeague,
     getLeagueById,
     getLeagues,
-    deleteLeague
+    deleteLeague,
+    createTeaserType,
+    updateTeaserType,
+    getTeaserTypeById,
+    getTeaserTypes,
+    deleteTeaserType
 }
 
 export default pickServices;
