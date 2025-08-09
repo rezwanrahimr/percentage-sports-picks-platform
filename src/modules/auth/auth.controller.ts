@@ -29,8 +29,8 @@ const logIn = catchAsync(async (req, res) => {
 });
 
 const googleLogin = catchAsync(async (req, res) => {
-  const { idToken } = req.body;
-  const result = await authServices.googleLogin(idToken);
+  const { name, email } = req.body;
+  const result = await authServices.googleLogin(name, email);
   res.status(200).json({
     message: 'Google Login Successful',
     approvalToken: result.approvalToken,

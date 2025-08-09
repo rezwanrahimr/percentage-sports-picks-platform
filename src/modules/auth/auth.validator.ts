@@ -8,7 +8,7 @@ export const logInValidator = z.object({
 
 export const googleLoginValidator = z.object({
   body: z.object({
-    idToken: z.string().min(1, { message: "ID Token is required" }),
+    email: z.string().min(1, { message: "Email is required" })
   }),
 })
 

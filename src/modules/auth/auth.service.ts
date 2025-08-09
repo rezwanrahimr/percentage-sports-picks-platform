@@ -51,7 +51,6 @@ const logIn = async (
   let user = await UserModel.findOne({ email });
   let verificationCode = await VerificationCodeModel.find({ email, code });
 
-  console.log("verificationCode is", verificationCode);
 
   if (verificationCode?.[0].expiresAt && verificationCode[0].expiresAt < new Date()) {
     throw new Error('This verification code has expired');
@@ -110,28 +109,18 @@ const logIn = async (
 };
 
 
-const googleLogin = async (idToken: string) => {
+const googleLogin = async (name: string, email: string) => {
 
-  const ticket = await client.verifyIdToken({
-    idToken,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  });
-
-  const payload = ticket.getPayload();
-  if (!payload) {
-    throw new Error('Invalid Google token payload');
+  if (!email) {
+    throw new Error('Email is required for Google login');
   }
-  const { email, sub, name, picture } = payload;
 
   let user = await UserModel.findOne({ email });
 
   if (!user) {
     user = await UserModel.create({
-      name,
+      name: name || email.split('@')[0],
       email,
-      provider: 'google',
-      providerId: sub,
-      img: picture
     });
   }
 
