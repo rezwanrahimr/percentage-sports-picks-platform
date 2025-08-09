@@ -1,5 +1,5 @@
 import idConverter from "../../util/idConvirter";
-import { SportTypeModel } from "./pick.model"
+import { LeagueModel, SportTypeModel } from "./pick.model"
 
 /* sport type */
 const createSportType = async (title: string) => {
@@ -92,12 +92,106 @@ const deleteSportType = async (id: string) => {
 }
 
 
+/* league */
+const createLeague = async (title: string) => {
+    try {
+        const isExist = await LeagueModel.findOne({ title });
+        if (isExist) {
+            throw new Error("League already exists");
+        }
+
+        const league = await LeagueModel.create({ title });
+        return league;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while creating the league");
+        } else {
+            throw new Error("An error occurred while creating the league");
+        }
+    }
+}
+
+const updateLeague = async (id: string, title: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await LeagueModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("League does not exist");
+        }
+
+        const league = await LeagueModel.findByIdAndUpdate(idConvert, { title }, { new: false });
+        return league;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while updating the league");
+        } else {
+            throw new Error("An error occurred while updating the league");
+        }
+    }
+}
+
+const getLeagueById = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await LeagueModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("League does not exist");
+        }
+
+        const league = await LeagueModel.findById(idConvert);
+        return league;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the league");
+        } else {
+            throw new Error("An error occurred while retrieving the league");
+        }
+    }
+}
+
+const getLeagues = async () => {
+    try {
+        const leagues = await LeagueModel.find();
+        return leagues;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the leagues");
+        } else {
+            throw new Error("An error occurred while retrieving the leagues");
+        }
+    }
+}
+
+const deleteLeague = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await LeagueModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("League does not exist");
+        }
+
+        const league = await LeagueModel.findByIdAndDelete(idConvert);
+        return league;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while deleting the league");
+        } else {
+            throw new Error("An error occurred while deleting the league");
+        }
+    }
+}
+
 const pickServices = {
     createSportType,
     updateSportType,
     getSportTypeById,
     getSportTypes,
-    deleteSportType
+    deleteSportType,
+    createLeague,
+    updateLeague,
+    getLeagueById,
+    getLeagues,
+    deleteLeague
 }
 
 export default pickServices;

@@ -67,12 +67,82 @@ const deleteSportType = catchAsync(async (req, res) => {
 })
 
 
+/* league */
+const createLeague = catchAsync(async (req, res) => {
+    const { title } = req.body;
+
+    const result = await pickServices.createLeague(title);
+    res.status(201).json({
+        success: true,
+        message: "League created successfully",
+        data: {
+            league: result
+        }
+    });
+})
+
+const updateLeague = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { title } = req.body;
+
+    const result = await pickServices.updateLeague(id, title);
+    res.status(200).json({
+        success: true,
+        message: "League updated successfully",
+        data: {
+            league: result
+        }
+    });
+})
+
+const getLeagueById = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.getLeagueById(id);
+    res.status(200).json({
+        success: true,
+        message: "League retrieved successfully",
+        data: {
+            league: result
+        }
+    });
+})
+
+const getLeagues = catchAsync(async (req, res) => {
+    const result = await pickServices.getLeagues();
+    res.status(200).json({
+        success: true,
+        message: "Leagues retrieved successfully",
+        data: {
+            leagues: result
+        }
+    });
+})
+
+const deleteLeague = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.deleteLeague(id);
+    res.status(200).json({
+        success: true,
+        message: "League deleted successfully",
+        data: {
+            league: result
+        }
+    });
+})
+
 const pickController = {
     createSportType,
     updateSportType,
     getSportTypeById,
     getSportTypes,
-    deleteSportType
+    deleteSportType,
+    createLeague,
+    updateLeague,
+    getLeagueById,
+    getLeagues,
+    deleteLeague
 }
 
 export default pickController;
