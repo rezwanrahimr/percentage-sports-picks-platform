@@ -9,3 +9,8 @@ export type TLeague = {
 export type TTeaserType = {
     title: string;
 }
+
+export type TTeam = {
+    name: string;
+    image: string;
+}

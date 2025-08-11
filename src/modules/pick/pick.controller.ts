@@ -198,6 +198,79 @@ const deleteTeaserType = catchAsync(async (req, res) => {
     });
 })
 
+
+
+/* team */
+const createTeam = catchAsync(async (req, res) => {
+    const { name } = req.body;
+    const imgFile = req.files && (req.files as any).images
+        ? (req.files as any).images[0]
+        : null;
+
+    const result = await pickServices.createTeam(name, imgFile);
+    res.status(201).json({
+        success: true,
+        message: "Team created successfully",
+        data: {
+            team: result
+        }
+    });
+})
+
+const updateTeam = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+    const imgFile = req.files && (req.files as any).images
+        ? (req.files as any).images[0]
+        : null;
+
+    const result = await pickServices.updateTeam(id, name, imgFile);
+    res.status(200).json({
+        success: true,
+        message: "Team updated successfully",
+        data: {
+            team: result
+        }
+    });
+})
+
+const getTeamById = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.getTeamById(id);
+    res.status(200).json({
+        success: true,
+        message: "Team retrieved successfully",
+        data: {
+            team: result
+        }
+    });
+})
+
+const getTeams = catchAsync(async (req, res) => {
+    const result = await pickServices.getTeams();
+    res.status(200).json({
+        success: true,
+        message: "Teams retrieved successfully",
+        data: {
+            teams: result
+        }
+    });
+})
+
+const deleteTeam = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.deleteTeam(id);
+    res.status(200).json({
+        success: true,
+        message: "Team deleted successfully",
+        data: {
+            team: result
+        }
+    });
+})
+
 const pickController = {
     createSportType,
     updateSportType,
@@ -213,7 +286,12 @@ const pickController = {
     updateTeaserType,
     getTeaserTypeById,
     getTeaserTypes,
-    deleteTeaserType
+    deleteTeaserType,
+    createTeam,
+    updateTeam,
+    getTeamById,
+    getTeams,
+    deleteTeam
 }
 
 export default pickController;

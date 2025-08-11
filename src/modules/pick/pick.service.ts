@@ -1,5 +1,6 @@
 import idConverter from "../../util/idConvirter";
-import { LeagueModel, SportTypeModel, TeaserTypeModel } from "./pick.model"
+import { uploadToCloudinary } from "../../util/uploadImgToCloudinary";
+import { LeagueModel, SportTypeModel, TeamModel, TeaserTypeModel } from "./pick.model"
 
 /* sport type */
 const createSportType = async (title: string) => {
@@ -271,6 +272,105 @@ const deleteTeaserType = async (id: string) => {
     }
 }
 
+
+
+/* team */
+
+const createTeam = async (name: string, image: Express.Multer.File) => {
+    try {
+        const isExist = await TeamModel.findOne({ name });
+        if (isExist) {
+            throw new Error("Team already exists");
+        }
+        const result = await uploadToCloudinary(image.path, 'profile/images');
+        const team = await TeamModel.create({ name, image: result });
+        return team;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while creating the team");
+        } else {
+            throw new Error("An error occurred while creating the team");
+        }
+    }
+}
+
+const updateTeam = async (id: string, name: string, image: Express.Multer.File) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await TeamModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Team does not exist");
+        }
+
+        if (image) {
+            const result = await uploadToCloudinary(image.path, 'profile/images');
+            const team = await TeamModel.findByIdAndUpdate(idConvert, { name, image: result }, { new: false });
+            return team;
+        } else {
+            const team = await TeamModel.findByIdAndUpdate(idConvert, { name }, { new: false });
+            return team;
+        }
+
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while updating the team");
+        } else {
+            throw new Error("An error occurred while updating the team");
+        }
+    }
+}
+
+const getTeamById = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await TeamModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Team does not exist");
+        }
+
+        const team = await TeamModel.findById(idConvert);
+        return team;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the team");
+        } else {
+            throw new Error("An error occurred while retrieving the team");
+        }
+    }
+}
+
+const getTeams = async () => {
+    try {
+        const teams = await TeamModel.find();
+        return teams;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the teams");
+        } else {
+            throw new Error("An error occurred while retrieving the teams");
+        }
+    }
+}
+
+const deleteTeam = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await TeamModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Team does not exist");
+        }
+
+        const team = await TeamModel.findByIdAndDelete(idConvert);
+        return team;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while deleting the team");
+        } else {
+            throw new Error("An error occurred while deleting the team");
+        }
+    }
+}
+
 const pickServices = {
     createSportType,
     updateSportType,
@@ -286,7 +386,12 @@ const pickServices = {
     updateTeaserType,
     getTeaserTypeById,
     getTeaserTypes,
-    deleteTeaserType
+    deleteTeaserType,
+    createTeam,
+    updateTeam,
+    getTeamById,
+    getTeams,
+    deleteTeam
 }
 
 export default pickServices;
