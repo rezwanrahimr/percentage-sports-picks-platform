@@ -271,6 +271,72 @@ const deleteTeam = catchAsync(async (req, res) => {
     });
 })
 
+
+/* pick */
+const createPick = catchAsync(async (req, res) => {
+    const { sport, league, teaser, teamDetails, riskingAmount, toWinAmount } = req.body;
+
+    const result = await pickServices.createPick(sport, league, teaser, teamDetails, riskingAmount, toWinAmount);
+    res.status(201).json({
+        success: true,
+        message: "Pick created successfully",
+        data: {
+            pick: result
+        }
+    });
+})
+
+const updatePick = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { sport, league, teaser, teamDetails, riskingAmount, toWinAmount } = req.body;
+
+    const result = await pickServices.updatePick(id, sport, league, teaser, teamDetails, riskingAmount, toWinAmount);
+    res.status(200).json({
+        success: true,
+        message: "Pick updated successfully",
+        data: {
+            pick: result
+        }
+    });
+})
+
+const getPickById = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.getPickById(id);
+    res.status(200).json({
+        success: true,
+        message: "Pick retrieved successfully",
+        data: {
+            pick: result
+        }
+    });
+})
+
+const getPicks = catchAsync(async (req, res) => {
+    const result = await pickServices.getPicks();
+    res.status(200).json({
+        success: true,
+        message: "Picks retrieved successfully",
+        data: {
+            picks: result
+        }
+    });
+})
+
+const deletePick = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pickServices.deletePick(id);
+    res.status(200).json({
+        success: true,
+        message: "Pick deleted successfully",
+        data: {
+            pick: result
+        }
+    });
+})
+
 const pickController = {
     createSportType,
     updateSportType,
@@ -291,7 +357,12 @@ const pickController = {
     updateTeam,
     getTeamById,
     getTeams,
-    deleteTeam
+    deleteTeam,
+    createPick,
+    updatePick,
+    getPickById,
+    getPicks,
+    deletePick
 }
 
 export default pickController;

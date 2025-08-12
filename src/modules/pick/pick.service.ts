@@ -1,6 +1,6 @@
 import idConverter from "../../util/idConvirter";
 import { uploadToCloudinary } from "../../util/uploadImgToCloudinary";
-import { LeagueModel, SportTypeModel, TeamModel, TeaserTypeModel } from "./pick.model"
+import { LeagueModel, PickModel, SportTypeModel, TeamModel, TeaserTypeModel } from "./pick.model"
 
 /* sport type */
 const createSportType = async (title: string) => {
@@ -371,6 +371,93 @@ const deleteTeam = async (id: string) => {
     }
 }
 
+
+
+/* pick */
+
+const createPick = async (sport: string, league: string, teaser: string, teamDetails: string, riskingAmount: number, toWinAmount: number) => {
+    try {
+        const pick = await PickModel.create({ sport, league, teaser, teamDetails, riskingAmount, toWinAmount });
+        return pick;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while creating the pick");
+        } else {
+            throw new Error("An error occurred while creating the pick");
+        }
+    }
+}
+
+const updatePick = async (id: string, sport: string, league: string, teaser: string, teamDetails: string, riskingAmount: number, toWinAmount: number) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await PickModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Pick does not exist");
+        }
+
+        const pick = await PickModel.findByIdAndUpdate(idConvert, { sport, league, teaser, teamDetails, riskingAmount, toWinAmount }, { new: false });
+        return pick;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while updating the pick");
+        } else {
+            throw new Error("An error occurred while updating the pick");
+        }
+    }
+}
+
+const getPickById = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await PickModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Pick does not exist");
+        }
+
+        const pick = await PickModel.findById(idConvert).populate("sport league teaser teamDetails.team");
+        return pick;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the pick");
+        } else {
+            throw new Error("An error occurred while retrieving the pick");
+        }
+    }
+}
+
+const getPicks = async () => {
+    try {
+        const picks = await PickModel.find().populate("sport league teaser teamDetails.team");
+        return picks;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the picks");
+        } else {
+            throw new Error("An error occurred while retrieving the picks");
+        }
+    }
+}
+
+const deletePick = async (id: string) => {
+    try {
+        const idConvert = idConverter(id);
+        const isExist = await PickModel.findById(idConvert);
+        if (!isExist) {
+            throw new Error("Pick does not exist");
+        }
+
+        const pick = await PickModel.findByIdAndDelete(idConvert);
+        return pick;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while deleting the pick");
+        } else {
+            throw new Error("An error occurred while deleting the pick");
+        }
+    }
+}
+
 const pickServices = {
     createSportType,
     updateSportType,
@@ -391,7 +478,12 @@ const pickServices = {
     updateTeam,
     getTeamById,
     getTeams,
-    deleteTeam
+    deleteTeam,
+    createPick,
+    updatePick,
+    getPickById,
+    getPicks,
+    deletePick
 }
 
 export default pickServices;

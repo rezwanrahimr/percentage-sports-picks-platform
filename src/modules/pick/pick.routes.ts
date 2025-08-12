@@ -39,4 +39,12 @@ pickRoutes.get('/team/:id', auth(userRole.admin), pickController.getTeamById);
 pickRoutes.get('/teams', auth(userRole.admin), pickController.getTeams);
 pickRoutes.delete('/team/:id', auth(userRole.admin), pickController.deleteTeam);
 
+
+/* pick routes */
+pickRoutes.post('/create-pick', auth(userRole.admin), pickController.createPick);
+pickRoutes.patch('/update-pick/:id', auth(userRole.admin), pickController.updatePick);
+pickRoutes.get('/get-pick/:id', auth(userRole.admin), pickController.getPickById);
+pickRoutes.get('/get-picks', auth(userRole.admin), pickController.getPicks);
+pickRoutes.delete('/delete-pick/:id', auth(userRole.admin), pickController.deletePick);
+
 export default pickRoutes;

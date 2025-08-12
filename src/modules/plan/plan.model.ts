@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import { TPlan } from "./plan.interface";
 
 const planSchema = new Schema<TPlan>({
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     price: { type: Number, required: true },
     services: { type: [Schema.Types.ObjectId], ref: "Service", required: true },
     freeTrialDays: { type: Number, default: 0 },
