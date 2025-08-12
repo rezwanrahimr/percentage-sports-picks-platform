@@ -56,7 +56,16 @@ const getPlanById = async (id: string) => {
 
 const getPlans = async () => {
     try {
-        const plans = await PlanModel.find();
+        const plans = await PlanModel.find().populate({
+            path: "services", // from Plan model
+            model: "Pick",
+            populate: [
+                { path: "sport", model: "SportType" },
+                { path: "league", model: "League" },
+                { path: "teaser", model: "TeaserType" },
+                { path: "teamDetails.team", model: "Team" }
+            ]
+        });
         return plans;
     } catch (error) {
         if (error instanceof Error) {

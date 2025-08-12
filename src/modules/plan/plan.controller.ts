@@ -4,6 +4,7 @@ import planServices from "./plan.service";
 // plane controller
 const createPlan = catchAsync(async (req, res) => {
     const data = req.body;
+    console.log("Creating plan with data:", data);
 
     const result = await planServices.createPlan(data);
     res.status(201).json({

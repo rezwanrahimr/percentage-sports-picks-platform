@@ -1,8 +1,9 @@
 import express from 'express';
 import authRouter from '../modules/auth/auth.routes';
 import userRoutes from '../modules/user/user.routes';
-import path from 'path';
 import pickRoutes from '../modules/pick/pick.routes';
+import planRoutes from '../modules/plan/plan.routes';
+import promoCodeRoutes from '../modules/promoCode/promoCode.routes';
 
 const Routes = express.Router();
 // Array of module routes
@@ -18,6 +19,14 @@ const moduleRouts = [
   {
     path: '/picks',
     router: pickRoutes
+  },
+  {
+    path: '/plans',
+    router: planRoutes
+  },
+  {
+    path: '/promo-codes',
+    router: promoCodeRoutes
   }
 ];
 
