@@ -2,7 +2,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { v2 as cloudinary } from "cloudinary";
-import config from "../config";
+import {config} from "../config";
 
 // Delete file after upload
 const deleteFile = async (filePath: string) => {

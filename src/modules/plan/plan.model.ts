@@ -4,6 +4,7 @@ import { TPlan } from "./plan.interface";
 const planSchema = new Schema<TPlan>({
     name: { type: String, required: true, unique: true },
     price: { type: Number, required: true },
+    stripePriceId: { type: String, unique: true },
     services: { type: [Schema.Types.ObjectId], ref: "Pick", required: true },
     freeTrialDays: { type: Number, default: 0 },
     bestValue: { type: Boolean, default: false },

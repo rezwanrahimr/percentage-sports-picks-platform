@@ -26,9 +26,8 @@ const config = {
 
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2024-11-01" as Stripe.LatestApiVersion
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
 
 
 export { config, stripe };

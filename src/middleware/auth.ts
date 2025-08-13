@@ -20,8 +20,6 @@ const auth = (...requeredUserRole: TUserRole[]) => {
 
         const decoded = authUtill.decodeAuthorizationToken(authorizationToken);
 
-        console.log("decoded is", decoded);
-
         if (!decoded) {
             throw new Error('Unauthorized User: Token decoding failed');
         }

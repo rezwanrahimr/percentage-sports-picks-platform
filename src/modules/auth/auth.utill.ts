@@ -1,5 +1,5 @@
 import jwt, { Secret } from "jsonwebtoken";
-import config from "../../config";
+import {config} from "../../config";
 
 const createToken = (tokenizeData:Record<string,any>, tokenSecret:string, expiresIn:any): string => {
     if (!tokenSecret) {

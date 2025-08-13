@@ -8,4 +8,7 @@ export type TPromoCode = {
     validUntil: Date;
     usageLimit?: number;
     usedCount?: number;
+    stripeCouponId?: string;
+    maxUses?: number;
+    
 };
