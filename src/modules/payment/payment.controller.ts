@@ -11,8 +11,6 @@ const createCheckout = catchAsync(async (req: Request, res: Response) => {
         const successUrl = `${process.env.FRONTEND_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`;
         const cancelUrl = `${process.env.FRONTEND_URL}/purchase-cancel`;
 
-        console.log(user, planId, promoCode);
-
         const session = await paymentService.createCheckoutSession({
             user,
             planId,
@@ -33,91 +31,67 @@ const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
     let event;
 
     try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET as string);
+        event = stripe.webhooks.constructEvent(
+            req.body, // raw Buffer thanks to express.raw
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET as string
+        );
     } catch (err: any) {
-        console.error("⚠️  Webhook signature verification failed.", err.message);
+        console.error("Webhook signature verification failed:", err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
     try {
+        console.log("➡️ Stripe event:", event.type);
+
         switch (event.type) {
             case "checkout.session.completed": {
-                const session = event.data.object as any; // Stripe.Session
+                const session = event.data.object as any;
                 const stripeCustomerId = session.customer as string;
-                // find the most recent pending subscription record for this customer
-                const sub = await UserSubscriptionModel.findOne({ stripeCustomerId, status: "pending" }).sort({ createdAt: -1 });
-                if (!sub) break;
 
-                // if subscription mode, session.subscription contains stripe subscription id
+                let sub = await UserSubscriptionModel.findOne({
+                    stripeCustomerId,
+                    status: "pending",
+                }).sort({ createdAt: -1 });
+
+                if (!sub && session.metadata.userId && session.metadata.planId) {
+                    sub = await UserSubscriptionModel.findOne({
+                        userId: session.metadata.userId,
+                        planId: session.metadata.planId,
+                        status: "pending",
+                    }).sort({ createdAt: -1 });
+                }
+
+                if (!sub) {
+                    console.warn("No pending subscription found for session:", session.id);
+                    break;
+                }
+
                 if (session.subscription) {
                     sub.stripeSubscriptionId = session.subscription;
-                    sub.status = "active";
-                    sub.startDate = new Date();
-                    // leave endDate to invoice events or subscriptions events
-                } else {
-                    // one-time payment
-                    sub.status = "active";
-                    sub.startDate = new Date();
-                    // optionally set endDate = now + 30 days depending on plan logic
                 }
+                sub.status = session.mode === "subscription" ? "active" : "completed"; // Subscription vs One-Time
+                sub.startDate = new Date();
 
-                // increment promo usedCount inside a transaction if promo present
                 if (sub.promoCodeId) {
-                    await paymentService.markPromoUsedIfAny(sub.promoCodeId.toString());
+                    await paymentService.markPromoUsedIfAny(String(sub.promoCodeId));
                 }
 
                 await sub.save();
+                console.log("Subscription/One-time payment activated for user:", sub.userId.toString());
                 break;
             }
-
-            case "invoice.payment_succeeded": {
-                const invoice = event.data.object as any;
-                const stripeSubscriptionId = invoice.subscription;
-                if (!stripeSubscriptionId) break;
-                const sub = await UserSubscriptionModel.findOne({ stripeSubscriptionId });
-                if (!sub) break;
-                sub.status = "active";
-                if (invoice.period_end) sub.endDate = new Date(invoice.period_end * 1000);
-                await sub.save();
-                break;
-            }
-
-            case "invoice.payment_failed": {
-                const invoice = event.data.object as any;
-                const stripeSubscriptionId = invoice.subscription;
-                if (!stripeSubscriptionId) break;
-                const sub = await UserSubscriptionModel.findOne({ stripeSubscriptionId });
-                if (sub) {
-                    sub.status = "past_due";
-                    await sub.save();
-                }
-                break;
-            }
-
-            case "customer.subscription.deleted": {
-                const subscription = event.data.object as any;
-                const stripeSubscriptionId = subscription.id;
-                const sub = await UserSubscriptionModel.findOne({ stripeSubscriptionId });
-                if (sub) {
-                    sub.status = "canceled";
-                    sub.endDate = new Date(subscription.current_period_end * 1000);
-                    await sub.save();
-                }
-                break;
-            }
-
-            default:
-                // console.log(`Unhandled event type ${event.type}`);
-                break;
+            // Handle other cases (invoice.payment_succeeded, etc.) as before
         }
 
-        // record event.id in your EventLog collection if you want idempotency
+
         res.json({ received: true });
     } catch (err: any) {
         console.error("Webhook processing error:", err);
         res.status(500).send();
     }
 });
+
 
 const paymentController = {
     createCheckout,

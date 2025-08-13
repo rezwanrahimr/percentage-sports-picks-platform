@@ -28,25 +28,21 @@ export async function createCheckoutSession(params: {
     cancelUrl: string,
 }) {
     const { user, planId, promoCode, successUrl, cancelUrl } = params;
-    console.log('param data', user, planId, promoCode);
+
     const plan = await PlanModel.findById(planId);
-    console.log('plan', plan);
     if (!plan) throw new Error("Plan not found");
 
-    let promo: Partial<TPromoCode> | null = null;
+    let promo: (Partial<TPromoCode> & { _id?: any }) | null = null;
     if (promoCode) {
         promo = await promoCodeModel.findOne({ code: promoCode });
-        console.log('promo code', promo);
         if (!promo) throw new Error("Invalid promo code");
         if (promo.validUntil && promo.validUntil < new Date()) throw new Error("Promo expired");
     }
 
     const stripeCustomerId = await getOrCreateStripeCustomer(user);
 
-    console.log('stripeCustomerId', stripeCustomerId);
-
+    // Define session parameters
     const sessionParams: any = {
-        mode: plan.subscription ? "subscription" : "payment",
         customer: stripeCustomerId,
         line_items: [
             {
@@ -54,6 +50,9 @@ export async function createCheckoutSession(params: {
                     currency: "usd",
                     unit_amount: plan.price * 100,
                     product_data: { name: plan.name },
+                    recurring: plan.subscription
+                        ? { interval: plan.billingInterval } // Only if it's a subscription
+                        : undefined,
                 },
                 quantity: 1,
             },
@@ -63,27 +62,43 @@ export async function createCheckoutSession(params: {
         payment_method_types: ["card"],
     };
 
-    if (plan.freeTrialDays && plan.subscription) {
-        sessionParams.subscription_data = { trial_period_days: plan.freeTrialDays };
+    // If it's a subscription plan, set the session as a subscription
+    if (plan.subscription) {
+        sessionParams.mode = "subscription";
+        if (plan.freeTrialDays) {
+            sessionParams.subscription_data = { trial_period_days: plan.freeTrialDays };
+        }
+    } else if (plan.oneTimePayment) {
+        sessionParams.mode = "payment"; // For one-time payments
     }
 
+    // Apply promo code if applicable
     if (promo?.stripeCouponId) {
         sessionParams.discounts = [{ coupon: promo.stripeCouponId }];
     }
 
+    // Create the checkout session
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    // create a pending subscription record to be updated in webhook
-    await UserSubscriptionModel.create({
+    // Create a UserSubscription record to save subscription details
+    const userSubscription = new UserSubscriptionModel({
         userId: user.id,
         planId: plan._id,
         stripeCustomerId,
+        price: plan.price, // Set the price from the plan
+        type: plan.subscription ? "subscription" : "one_time", // Determine type
         status: "pending",
-        promoCodeId: promo ? promo?._id : null
+        transactionId: session.id, // Session ID as the transaction ID
+        startDate: plan.subscription ? new Date() : null, // Set start date if it's a subscription
+        endDate: plan.subscription ? null : new Date(), // Set end date if it's a one-time payment
+        promoCodeId: promo ? promo._id : null, // Apply promo code if available
     });
+
+    await userSubscription.save(); // Save subscription record
 
     return session;
 }
+
 
 /**
  * Safely increment promo usedCount when a payment is confirmed.
@@ -96,11 +111,11 @@ export async function markPromoUsedIfAny(promoId: string | null) {
         await sess.withTransaction(async () => {
             const promo = await promoCodeModel.findById(promoId).session(sess);
             if (!promo) throw new Error("Promo not found in transaction");
-            if (promo?.maxUses && promo?.usedCount >= promo?.maxUses) {
+            if (promo?.maxUses && (typeof promo.usedCount === "number" ? promo.usedCount : 0) >= promo.maxUses) {
                 throw new Error("Promo usage limit exceeded");
             }
-            promo?.usedCount += 1;
-            await promo?.save({ session: sess });
+            promo.usedCount = (typeof promo.usedCount === "number" ? promo.usedCount : 0) + 1;
+            await promo.save({ session: sess });
         });
     } finally {
         sess.endSession();

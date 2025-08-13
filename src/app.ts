@@ -7,11 +7,7 @@ import Routes from './routes';
 import paymentController from './modules/payment/payment.controller';
 
 
-app.post(
-  "/api/v1/payment/webhook",
-  express.raw({ type: "application/json" }),
-  paymentController.stripeWebhook
-);
+app.post("/api/payment/webhook", express.raw({ type: "application/json" }), paymentController.stripeWebhook);
 
 
 // middleWares

@@ -8,5 +8,7 @@ export type TPlan = {
     freeTrialDays?: number;
     bestValue?: boolean;
     subscription?: boolean;
+    billingInterval?: "week" | "month" | "year";
     oneTimePayment?: boolean;
+    description?: string;
 }
