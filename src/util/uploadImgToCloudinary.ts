@@ -25,6 +25,10 @@ export const uploadToCloudinary = async (filePath: string, folder: string) => {
     api_secret: config.cloudinary_api_secret,
   });
 
+  console.log(`cloud_name: ${config.cloudinary_name}`);
+  console.log(`api_key: ${config.cloudinary_api_key}`);
+  console.log(`api_secret: ${config.cloudinary_api_secret}`);
+
   try {
     const result = await cloudinary.uploader.upload(filePath, {
       folder,
