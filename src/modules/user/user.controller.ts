@@ -4,7 +4,11 @@ import userServices from './user.service';
 
 const createUser = catchAsync(async (req, res) => {
   const user = req.body;
-  const result = await userServices.createUser(user);
+  const imgFile = req.files && (req.files as any).images
+    ? (req.files as any).images[0]
+    : null;
+
+  const result = await userServices.createUser(user, imgFile);
   res.status(200).json({
     message: result.message || 'user created successfully',
     data: result,
@@ -14,12 +18,15 @@ const createUser = catchAsync(async (req, res) => {
 const updateUser = catchAsync(async (req, res) => {
   const userId = req.params.id;
   const userData = req.body;
+  const imgFile = req.files && (req.files as any).images
+    ? (req.files as any).images[0]
+    : null;
 
   if (!userId || !userData) {
     throw new Error('User ID and data are required for update.');
   }
 
-  const result = await userServices.updateUser(userId, userData);
+  const result = await userServices.updateUser(userId, userData, imgFile);
   res.status(200).json({
     success: true,
     message: 'User updated successfully',

@@ -2,9 +2,10 @@ import mongoose, { ClientSession, Types } from 'mongoose';
 import { TUser } from './user.interface';
 import { UserModel } from './user.model';
 import idConverter from '../../util/idConvirter';
+import { uploadToCloudinary } from '../../util/uploadImgToCloudinary';
 
-const createUser = async (payload: Partial<TUser>, method?: string) => {
 
+const createUser = async (payload: Partial<TUser>, image?: Express.Multer.File) => {
   const existingUser = await UserModel.findOne({ email: payload.email });
 
   if (existingUser) {
@@ -12,7 +13,6 @@ const createUser = async (payload: Partial<TUser>, method?: string) => {
       message: "A user with this email already exists and is active.",
       data: null,
     };
-
   }
 
   const session: ClientSession = await mongoose.startSession();
@@ -20,15 +20,15 @@ const createUser = async (payload: Partial<TUser>, method?: string) => {
   try {
     const result = await session.withTransaction(async () => {
       let user;
+      let imageUrl = null;
 
-      if (method) {
-        const { ...rest } = payload;
-        const created = await UserModel.create([rest], { session });
-        user = created[0];
-      } else {
-        user = new UserModel(payload);
-        await user.save({ session });
+      if (image) {
+        // Assuming uploadToCloudinary is your function for uploading to Cloudinary
+        imageUrl = await uploadToCloudinary(image.path, 'profile/images');
       }
+
+      user = new UserModel({ ...payload, img: imageUrl });
+      await user.save({ session });
 
       return {
         message: "User created successfully.",
@@ -48,22 +48,36 @@ const createUser = async (payload: Partial<TUser>, method?: string) => {
   }
 };
 
-const updateUser = async (userId: string, userData: Partial<TUser>) => {
+
+
+const updateUser = async (userId: string, userData: Partial<TUser>, image?: Express.Multer.File) => {
+  // Convert the userId to the appropriate format
   const userIdConverted = idConverter(userId);
   if (!userIdConverted) {
     throw new Error("User ID conversion failed");
   }
 
+  // Ensure email and role cannot be updated
   if (userData?.email || userData?.role) {
     throw new Error("Email and role cannot be updated");
   }
 
+  // If image is provided, upload it and get the image URL
+  let imageUrl = null;
+  if (image) {
+    imageUrl = await uploadToCloudinary(image.path, 'profile/images');
+    userData.img = imageUrl; // Update the userData with the new image URL
+  }
+
+  // Update the user in the database
   const result = await UserModel.findByIdAndUpdate(userIdConverted, userData, { new: true });
   if (!result) {
     throw new Error("User not found or update failed");
   }
+
   return result;
 };
+
 
 const getAllUsers = async () => {
   const result = await UserModel.find();
