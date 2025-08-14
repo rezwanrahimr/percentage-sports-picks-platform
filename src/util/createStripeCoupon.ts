@@ -21,12 +21,6 @@ async function createStripeCoupon(promo: TPromoCode): Promise<string> {
 
     // Save the created Stripe coupon ID to the promo code in your database
     promo.stripeCouponId = coupon.id;
-    // Update the promo code in your database using your data access method
-    // Example: await PromoCodeModel.update({ _id: promo._id }, { stripeCouponId: coupon.id });
-    // Replace the following line with your actual update logic:
-    // await updatePromoCodeStripeCouponId(promo._id, coupon.id);
-
-    // Return the Stripe coupon ID
     return coupon.id;
 }
 

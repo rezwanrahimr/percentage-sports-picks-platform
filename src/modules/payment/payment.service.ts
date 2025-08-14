@@ -69,6 +69,10 @@ export async function createCheckoutSession(params: {
         success_url: successUrl,
         cancel_url: cancelUrl,
         payment_method_types: ["card"],
+        metadata: {
+            userId: user.id,
+            planId: plan._id.toString(),
+        },
     };
 
     // If it's a subscription plan, set the session as a subscription

@@ -6,5 +6,6 @@ import { userRole } from '../../constents';
 const paymentRoutes = express.Router();
 
 paymentRoutes.post('/create-checkout-session', auth(userRole.admin, userRole.user), paymentController.createCheckout);
+paymentRoutes.post('/verify-payment', auth(userRole.admin, userRole.user), paymentController.verifyPayment);
 
 export default paymentRoutes;
