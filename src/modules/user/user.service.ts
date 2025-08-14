@@ -75,6 +75,14 @@ const updateUser = async (userId: string, userData: Partial<TUser>, image?: Expr
 };
 
 
+const getUserById = async (userId: string) => {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+};
+
 const getAllUsers = async () => {
   const result = await UserModel.find();
   return result;
@@ -109,7 +117,8 @@ const userServices = {
   getAllUsers,
   deleteSingleUser,
   selfDistuct,
-  updateUser
+  updateUser,
+  getUserById
 };
 
 export default userServices;

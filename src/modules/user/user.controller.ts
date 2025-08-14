@@ -34,6 +34,20 @@ const updateUser = catchAsync(async (req, res) => {
   });
 })
 
+const getUserById = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await userServices.getUserById(id);
+  res.status(200).json({
+    success: true,
+    message: "user retrieved successfully",
+    data: {
+      user: result
+    }
+  });
+})
+
+
 const getAllUsers = catchAsync(async (req, res) => {
   const result = await userServices.getAllUsers();
   sendResponse(res, {
@@ -44,12 +58,26 @@ const getAllUsers = catchAsync(async (req, res) => {
   });
 });
 
+import { Types } from 'mongoose';
 
+const deleteUser = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const objectId = new Types.ObjectId(id);
+
+  const result = await userServices.deleteSingleUser(objectId);
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully",
+    data: result,
+  });
+});
 
 const userController = {
   createUser,
   getAllUsers,
-  updateUser
+  getUserById,
+  updateUser,
+  deleteUser
 };
 
 

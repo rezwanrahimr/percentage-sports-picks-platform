@@ -16,4 +16,11 @@ userRoutes.put('/update-user/:id', auth(userRole.admin, userRole.user), upload.f
     { name: 'images', maxCount: 1 },
 ]), userController.updateUser);
 
+
+userRoutes.get('/get-user/:id', auth(userRole.admin, userRole.user), userController.getUserById);
+
+userRoutes.delete('/delete-user/:id', auth(userRole.admin), userController.deleteUser);
+
+userRoutes.get('/get-all-users', auth(userRole.admin, userRole.user), userController.getAllUsers);
+
 export default userRoutes;
