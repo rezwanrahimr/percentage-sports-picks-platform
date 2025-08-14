@@ -81,6 +81,7 @@ const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
                 console.log("Subscription/One-time payment activated for user:", sub.userId.toString());
                 break;
             }
+
             // Handle other cases (invoice.payment_succeeded, etc.) as before
         }
 

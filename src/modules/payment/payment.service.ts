@@ -4,6 +4,7 @@ import { PlanModel } from "../plan/plan.model";
 import promoCodeModel from "../promoCode/promoCode.model";
 import { TPromoCode } from "../promoCode/promoCode.interface";
 import { UserSubscriptionModel } from "../userSubscription/userSubscription.model";
+import createStripeCoupon from "../../util/createStripeCoupon";
 
 export async function getOrCreateStripeCustomer(user: any) {
     if (user.stripeCustomerId) return user.stripeCustomerId;
@@ -32,11 +33,19 @@ export async function createCheckoutSession(params: {
     const plan = await PlanModel.findById(planId);
     if (!plan) throw new Error("Plan not found");
 
-    let promo: (Partial<TPromoCode> & { _id?: any }) | null = null;
+    let promo: (mongoose.Document<any, {}, TPromoCode> & TPromoCode) | null = null;
     if (promoCode) {
         promo = await promoCodeModel.findOne({ code: promoCode });
         if (!promo) throw new Error("Invalid promo code");
         if (promo.validUntil && promo.validUntil < new Date()) throw new Error("Promo expired");
+
+        // If Stripe coupon doesn't exist, create it
+        if (!promo.stripeCouponId) {
+            if (!promo.code) throw new Error("Promo code is missing");
+            const couponId = await createStripeCoupon(promo as TPromoCode);  // Create Stripe coupon if not present
+            promo.stripeCouponId = couponId;
+            await promo.save();
+        }
     }
 
     const stripeCustomerId = await getOrCreateStripeCustomer(user);
@@ -48,10 +57,10 @@ export async function createCheckoutSession(params: {
             {
                 price_data: {
                     currency: "usd",
-                    unit_amount: plan.price * 100,
+                    unit_amount: plan.price * 100, // Price in cents
                     product_data: { name: plan.name },
                     recurring: plan.subscription
-                        ? { interval: plan.billingInterval } // Only if it's a subscription
+                        ? { interval: plan.billingInterval } // Required for subscription
                         : undefined,
                 },
                 quantity: 1,
@@ -64,7 +73,7 @@ export async function createCheckoutSession(params: {
 
     // If it's a subscription plan, set the session as a subscription
     if (plan.subscription) {
-        sessionParams.mode = "subscription";
+        sessionParams.mode = "subscription";  // Make sure this is 'subscription'
         if (plan.freeTrialDays) {
             sessionParams.subscription_data = { trial_period_days: plan.freeTrialDays };
         }
@@ -100,10 +109,13 @@ export async function createCheckoutSession(params: {
 }
 
 
+
+
 /**
  * Safely increment promo usedCount when a payment is confirmed.
  * Uses a mongoose transaction to avoid race conditions (Atlas replica set required).
  */
+
 export async function markPromoUsedIfAny(promoId: string | null) {
     if (!promoId) return;
     const sess = await mongoose.startSession();
