@@ -51,25 +51,21 @@ const createUser = async (payload: Partial<TUser>, image?: Express.Multer.File) 
 
 
 const updateUser = async (userId: string, userData: Partial<TUser>, image?: Express.Multer.File) => {
-  // Convert the userId to the appropriate format
   const userIdConverted = idConverter(userId);
   if (!userIdConverted) {
     throw new Error("User ID conversion failed");
   }
 
-  // Ensure email and role cannot be updated
   if (userData?.email || userData?.role) {
     throw new Error("Email and role cannot be updated");
   }
 
-  // If image is provided, upload it and get the image URL
   let imageUrl = null;
   if (image) {
     imageUrl = await uploadToCloudinary(image.path, 'profile/images');
-    userData.img = imageUrl; // Update the userData with the new image URL
+    userData.img = imageUrl;
   }
 
-  // Update the user in the database
   const result = await UserModel.findByIdAndUpdate(userIdConverted, userData, { new: true });
   if (!result) {
     throw new Error("User not found or update failed");

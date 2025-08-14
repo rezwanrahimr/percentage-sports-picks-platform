@@ -69,7 +69,7 @@ const logIn = async (
       provider: 'email',
       isNotificationEnabled: true,
       isLoggedIn: true
-    }, 'email');
+    }, undefined);
 
 
     if (!newUserResponse.data) {
