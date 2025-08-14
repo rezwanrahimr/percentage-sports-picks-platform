@@ -375,9 +375,59 @@ const deleteTeam = async (id: string) => {
 
 /* pick */
 
-const createPick = async (sport: string, league: string, teaser: string, teamDetails: string, riskingAmount: number, toWinAmount: number) => {
+const createPick = async (
+    sport: string, 
+    league: string, 
+    teaser: string, 
+    teamDetails: { team: string, date: Date, time: Date, point: number }[], 
+    riskingAmount: number, 
+    toWinAmount: number
+) => {
     try {
-        const pick = await PickModel.create({ sport, league, teaser, teamDetails, riskingAmount, toWinAmount });
+        // Check if the sport exists
+        const isSportExist = await SportTypeModel.findById(sport);
+        if (!isSportExist) {
+            throw new Error("Sport does not exist");
+        }
+
+        // Check if the league exists and has a valid title (Not null)
+        const isLeagueExist = await LeagueModel.findById(league);
+        if (!isLeagueExist) {
+            throw new Error("League does not exist");
+        }
+        if (!isLeagueExist?.title) {
+            throw new Error("League title is missing or null");
+        }
+
+        // Check if the teaser exists
+        const isTeaserExist = await TeaserTypeModel.findById(teaser);
+        if (!isTeaserExist) {
+            throw new Error("Teaser does not exist");
+        }
+
+        // Validate each team inside teamDetails
+        for (let teamDetail of teamDetails) {
+            const isTeamExist = await TeamModel.findById(teamDetail.team);
+            if (!isTeamExist) {
+                throw new Error(`Team with ID ${teamDetail.team} does not exist`);
+            }
+        }
+
+        // Create the Pick with valid ObjectIds for teamDetails
+        const pick = await PickModel.create({
+            sport, 
+            league, 
+            teaser, 
+            teamDetails: teamDetails.map(td => ({
+                team: td.team,  // Store the ObjectId of the team
+                date: td.date, 
+                time: td.time, 
+                point: td.point
+            })),
+            riskingAmount, 
+            toWinAmount
+        });
+
         return pick;
     } catch (error) {
         if (error instanceof Error) {
@@ -388,15 +438,51 @@ const createPick = async (sport: string, league: string, teaser: string, teamDet
     }
 }
 
-const updatePick = async (id: string, sport: string, league: string, teaser: string, teamDetails: string, riskingAmount: number, toWinAmount: number) => {
+
+// Update Pick Service
+const updatePick = async (
+    id: string,
+    sport: string,
+    league: string,
+    teaser: string,
+    teamDetails: { team: string, date: Date, time: Date, point: number }[],
+    riskingAmount: number,
+    toWinAmount: number
+) => {
     try {
-        const idConvert = idConverter(id);
+        const idConvert = idConverter(id); // Convert ID (if needed)
         const isExist = await PickModel.findById(idConvert);
         if (!isExist) {
             throw new Error("Pick does not exist");
         }
 
-        const pick = await PickModel.findByIdAndUpdate(idConvert, { sport, league, teaser, teamDetails, riskingAmount, toWinAmount }, { new: false });
+        // Validate each team inside teamDetails
+        for (let teamDetail of teamDetails) {
+            const isTeamExist = await TeamModel.findById(teamDetail.team);
+            if (!isTeamExist) {
+                throw new Error(`Team with ID ${teamDetail.team} does not exist`);
+            }
+        }
+
+        // Update the pick with valid ObjectId for teamDetails
+        const pick = await PickModel.findByIdAndUpdate(
+            idConvert,
+            {
+                sport,
+                league,
+                teaser,
+                teamDetails: teamDetails.map(td => ({
+                    team: td.team,  // Store the ObjectId of the team
+                    date: td.date,
+                    time: td.time,
+                    point: td.point
+                })),
+                riskingAmount,
+                toWinAmount
+            },
+            { new: false }
+        );
+
         return pick;
     } catch (error) {
         if (error instanceof Error) {
@@ -407,15 +493,19 @@ const updatePick = async (id: string, sport: string, league: string, teaser: str
     }
 }
 
+// Get Pick by ID Service
 const getPickById = async (id: string) => {
     try {
-        const idConvert = idConverter(id);
+        const idConvert = idConverter(id); // Convert ID (if needed)
         const isExist = await PickModel.findById(idConvert);
         if (!isExist) {
             throw new Error("Pick does not exist");
         }
 
-        const pick = await PickModel.findById(idConvert).populate("sport league teaser teamDetails.team");
+        // Retrieve the pick and populate the team references inside teamDetails
+        const pick = await PickModel.findById(idConvert)
+            .populate("sport league teaser teamDetails.team"); // Populate the team reference correctly
+
         return pick;
     } catch (error) {
         if (error instanceof Error) {
@@ -426,9 +516,11 @@ const getPickById = async (id: string) => {
     }
 }
 
+// Get All Picks Service
 const getPicks = async () => {
     try {
-        const picks = await PickModel.find().populate("sport league teaser teamDetails.team");
+        const picks = await PickModel.find()
+            .populate("sport league teaser teamDetails.team"); // Populate all references correctly
         return picks;
     } catch (error) {
         if (error instanceof Error) {
@@ -439,15 +531,16 @@ const getPicks = async () => {
     }
 }
 
+// Delete Pick Service
 const deletePick = async (id: string) => {
     try {
-        const idConvert = idConverter(id);
+        const idConvert = idConverter(id); // Convert ID (if needed)
         const isExist = await PickModel.findById(idConvert);
         if (!isExist) {
             throw new Error("Pick does not exist");
         }
 
-        const pick = await PickModel.findByIdAndDelete(idConvert);
+        const pick = await PickModel.findByIdAndDelete(idConvert); // Delete the pick by ID
         return pick;
     } catch (error) {
         if (error instanceof Error) {
@@ -457,6 +550,7 @@ const deletePick = async (id: string) => {
         }
     }
 }
+
 
 const pickServices = {
     createSportType,

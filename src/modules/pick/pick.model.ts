@@ -2,19 +2,20 @@ import mongoose, { Schema } from "mongoose";
 import { TLeague, TPick, TSportType, TTeam, TTeaserType } from "./pick.interface";
 
 const SportTypeSchema = new Schema<TSportType>({
-    title: { type: String, required: true, unique: true }
+    title: { type: String, required: true, }
 });
 
 const LeagueSchema = new Schema<TLeague>({
-    title: { type: String, required: true, unique: true }
+    title: { type: String, required: true, unique: true, default: "Unknown" }
 });
 
+
 const TeaserTypeSchema = new Schema<TTeaserType>({
-    title: { type: String, required: true, unique: true }
+    title: { type: String, required: true, }
 });
 
 const TeamSchema = new Schema<TTeam>({
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true},
     image: { type: String }
 });
 

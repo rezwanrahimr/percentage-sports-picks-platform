@@ -13,7 +13,7 @@ const adminSeeder = async () => {
   
   const adminExist = await UserModel.findOne({ role: userRole.admin });
 
-  if (!adminExist) {
+  if (!adminExist) {6
     console.log('seeding admin....');
     const createAdmin =await userServices.createUser(admin);
     if (!createAdmin) 
