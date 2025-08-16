@@ -12,4 +12,4 @@ const PromoCodeSchema = new Schema<TPromoCode>({
     stripeCouponId: { type: String, unique: true },
 }, { timestamps: true });
 
-export default model<TPromoCode>("PromoCodeModel", PromoCodeSchema);
+export default model<TPromoCode>("PromoCodeCollection", PromoCodeSchema);
