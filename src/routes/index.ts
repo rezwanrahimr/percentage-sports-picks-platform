@@ -6,6 +6,7 @@ import planRoutes from '../modules/plan/plan.routes';
 import promoCodeRoutes from '../modules/promoCode/promoCode.routes';
 import paymentService from '../modules/payment/payment.service';
 import paymentRoutes from '../modules/payment/payment.routes';
+import userSubscriptionRoutes from '../modules/userSubscription/userSubscription.route';
 
 const Routes = express.Router();
 // Array of module routes
@@ -33,6 +34,10 @@ const moduleRouts = [
   {
     path: '/payments',
     router: paymentRoutes
+  },
+  {
+    path: '/user-subscriptions',
+    router: userSubscriptionRoutes
   }
 ];
 

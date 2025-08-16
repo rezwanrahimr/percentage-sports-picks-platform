@@ -47,4 +47,5 @@ pickRoutes.get('/get-pick/:id', auth(userRole.admin, userRole.user), pickControl
 pickRoutes.get('/get-picks', auth(userRole.admin, userRole.user), pickController.getPicks);
 pickRoutes.delete('/delete-pick/:id', auth(userRole.admin), pickController.deletePick);
 
+
 export default pickRoutes;
