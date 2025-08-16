@@ -7,8 +7,8 @@ const planRoutes = express.Router();
 
 planRoutes.post('/plan', auth(userRole.admin), planController.createPlan);
 planRoutes.patch('/plan/:id', auth(userRole.admin), planController.updatePlan);
-planRoutes.get('/plan/:id', auth(userRole.admin), planController.getPlanById);
-planRoutes.get('/plans', auth(userRole.admin), planController.getPlans);
+planRoutes.get('/plan/:id', auth(userRole.admin,userRole.user), planController.getPlanById);
+planRoutes.get('/plans', auth(userRole.admin, userRole.user), planController.getPlans);
 planRoutes.delete('/plan/:id', auth(userRole.admin), planController.deletePlan);
 
 
