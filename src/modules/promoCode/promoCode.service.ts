@@ -5,6 +5,10 @@ import promoCodeModel from "./promoCode.model";
 
 const createPromoCode = async (data: Partial<TPromoCode>) => {
     try {
+        const isExist = await promoCodeModel.findOne({ code: data?.code });
+        if (isExist) {
+            throw new Error("This code is already exist!");
+        }
         const promoCode = await promoCodeModel.create(data);
         return promoCode;
     } catch (error) {

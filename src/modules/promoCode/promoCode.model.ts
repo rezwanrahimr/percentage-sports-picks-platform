@@ -9,7 +9,7 @@ const PromoCodeSchema = new Schema<TPromoCode>({
     validUntil: { type: Date, required: true },
     usageLimit: { type: Number },
     usedCount: { type: Number, default: 0 },
-    stripeCouponId: { type: String, unique: true },
+    stripeCouponId: { type: String, unique: true, sparse: true },
 }, { timestamps: true });
 
 export default model<TPromoCode>("PromoCodeCollection", PromoCodeSchema);
