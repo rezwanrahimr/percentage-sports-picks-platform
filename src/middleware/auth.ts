@@ -27,6 +27,8 @@ const auth = (...requeredUserRole: TUserRole[]) => {
 
         const decoded = authUtill.decodeAuthorizationToken(authorizationToken);
 
+        console.log("decoded is", decoded);
+
         if (!decoded) {
             throw new Error('Unauthorized User: Token decoding failed');
         }
@@ -40,9 +42,11 @@ const auth = (...requeredUserRole: TUserRole[]) => {
 
         // Find the user in the database
         const findUser = await UserModel.findOne({
-            _id:idConverter(id),
-            isLoggedIn:true
+            _id: idConverter(id),
+            isLoggedIn: true
         });
+
+        console.log("findUser is", findUser, id);
 
         if (!findUser) {
             throw new Error('Unauthorized User: Forbidden Access');

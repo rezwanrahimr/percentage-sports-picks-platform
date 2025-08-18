@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import {config} from '../../config';
+import { config } from '../../config';
 import authUtill from './auth.utill';
 import { UserModel } from '../user/user.model';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -115,13 +115,18 @@ const googleLogin = async (name: string, email: string) => {
     throw new Error('Email is required for Google login');
   }
 
-  let user = await UserModel.findOne({ email });
+  let user = await UserModel.findOne({ email, provider: 'google' });
 
   if (!user) {
     user = await UserModel.create({
       name: name || email.split('@')[0],
       email,
+      provider: 'google',
+      isLoggedIn: true
     });
+  } else {
+    user.isLoggedIn = true;
+    await user.save();
   }
 
   const tokenizeData = {
