@@ -324,6 +324,18 @@ const getPicks = catchAsync(async (req, res) => {
     });
 })
 
+
+const getPicksCount = catchAsync(async (req, res) => {
+    const result = await pickServices.getPicksCount();
+    res.status(200).json({
+        success: true,
+        message: "Picks count retrieved successfully",
+        data: {
+            count: result
+        }
+    });
+})
+
 const deletePick = catchAsync(async (req, res) => {
     const { id } = req.params;
 
@@ -362,6 +374,7 @@ const pickController = {
     updatePick,
     getPickById,
     getPicks,
+    getPicksCount,
     deletePick
 }
 

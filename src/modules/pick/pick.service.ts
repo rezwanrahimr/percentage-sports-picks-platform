@@ -376,11 +376,11 @@ const deleteTeam = async (id: string) => {
 /* pick */
 
 const createPick = async (
-    sport: string, 
-    league: string, 
-    teaser: string, 
-    teamDetails: { team: string, date: Date, time: Date, point: number }[], 
-    riskingAmount: number, 
+    sport: string,
+    league: string,
+    teaser: string,
+    teamDetails: { team: string, date: Date, time: Date, point: number }[],
+    riskingAmount: number,
     toWinAmount: number
 ) => {
     try {
@@ -415,16 +415,16 @@ const createPick = async (
 
         // Create the Pick with valid ObjectIds for teamDetails
         const pick = await PickModel.create({
-            sport, 
-            league, 
-            teaser, 
+            sport,
+            league,
+            teaser,
             teamDetails: teamDetails.map(td => ({
                 team: td.team,  // Store the ObjectId of the team
-                date: td.date, 
-                time: td.time, 
+                date: td.date,
+                time: td.time,
                 point: td.point
             })),
-            riskingAmount, 
+            riskingAmount,
             toWinAmount
         });
 
@@ -531,6 +531,20 @@ const getPicks = async () => {
     }
 }
 
+// Get Picks Count Service
+const getPicksCount = async () => {
+    try {
+        const count = await PickModel.countDocuments();
+        return count;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message || "An error occurred while retrieving the picks");
+        } else {
+            throw new Error("An error occurred while retrieving the picks");
+        }
+    }
+}
+
 // Delete Pick Service
 const deletePick = async (id: string) => {
     try {
@@ -577,6 +591,7 @@ const pickServices = {
     updatePick,
     getPickById,
     getPicks,
+    getPicksCount,
     deletePick
 }
 
