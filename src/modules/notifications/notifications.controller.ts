@@ -129,7 +129,7 @@ class NotificationController {
 
     const notification = await NotificationModel
       .findById(notificationId)
-      .populate('sentBy', 'name email')
+      // .populate('sentBy', 'name email')
       .lean();
 
     if (!notification) {

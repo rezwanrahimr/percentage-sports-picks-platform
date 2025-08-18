@@ -298,8 +298,8 @@ class NotificationService {
 
       const notifications = await NotificationModel
         .find(filter)
-        .populate('sentBy', 'name email')
-        .populate('recipients', 'name email')
+        // .populate('sentBy', 'name email')
+        // .populate('recipients', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
