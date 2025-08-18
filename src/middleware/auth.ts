@@ -6,6 +6,13 @@ import { TUserRole } from '../constents';
 import { UserModel } from '../modules/user/user.model';
 import idConverter from '../util/idConvirter';
 
+// Define AuthUser type
+type AuthUser = {
+    id: string;
+    role: TUserRole;
+    iat?: number;
+};
+
 const auth = (...requeredUserRole: TUserRole[]) => {
     return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const authorizationToken = req?.headers?.authorization;
@@ -53,7 +60,11 @@ const auth = (...requeredUserRole: TUserRole[]) => {
         }
 
         // Attach user information to the request
-        req.user = decoded as JwtPayload;
+        req.user = {
+            id: (decoded as any).id,
+            role: (decoded as any).role,
+            iat: (decoded as any).iat
+        } as AuthUser;
 
         // Proceed to the next middleware
         next();

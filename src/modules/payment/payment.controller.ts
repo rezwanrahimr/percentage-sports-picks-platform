@@ -26,7 +26,7 @@ const createCheckout = catchAsync(async (req: Request, res: Response) => {
   }
 });
 
-const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
+export const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
   let event;
 

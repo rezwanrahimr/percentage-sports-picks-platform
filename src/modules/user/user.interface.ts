@@ -10,6 +10,9 @@ export type TUser = {
     img?: string,
     isNotificationEnabled?: boolean,
     isLoggedIn?: boolean,
-    loggedOutTime?: Date
+    loggedOutTime?: Date,
+    fcmToken?: string,
+    isEmailNotification?: boolean;
+    isPushNotification?: boolean;
 }
 

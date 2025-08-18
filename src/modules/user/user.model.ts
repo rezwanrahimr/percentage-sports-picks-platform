@@ -13,7 +13,10 @@ const UserSchema = new Schema<TUser>({
     img: { type: String, default: null },
     isNotificationEnabled: { type: Boolean, default: true },
     isLoggedIn: { type: Boolean, default: false },
-    loggedOutTime: { type: Date }
+    loggedOutTime: { type: Date },
+    fcmToken: { type: String },
+    isEmailNotification: { type: Boolean, default: true },
+    isPushNotification: { type: Boolean, default: true },
 }, { timestamps: true });
 
 

@@ -51,7 +51,7 @@ const appleLogin = catchAsync(async (req, res) => {
 });
 
 const logOut = catchAsync(async (req, res) => {
-  const userId = req?.user.id;
+  const userId = req.user?.id;
 
   if (!userId) {
     throw Error('token is missing');
@@ -66,7 +66,13 @@ const logOut = catchAsync(async (req, res) => {
 
 
 const collectProfileData = catchAsync(async (req, res) => {
-  const user = req.user
+  const user = req.user;
+  if (!user || !user.id) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized: User not found'
+    });
+  }
   const result = await authServices.collectProfileData(user.id);
   res.status(200).json({
     success: true,

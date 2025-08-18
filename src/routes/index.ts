@@ -4,9 +4,9 @@ import userRoutes from '../modules/user/user.routes';
 import pickRoutes from '../modules/pick/pick.routes';
 import planRoutes from '../modules/plan/plan.routes';
 import promoCodeRoutes from '../modules/promoCode/promoCode.routes';
-import paymentService from '../modules/payment/payment.service';
 import paymentRoutes from '../modules/payment/payment.routes';
 import userSubscriptionRoutes from '../modules/userSubscription/userSubscription.route';
+import notificationRouter from '../modules/notifications/notifiacations.routes';
 
 const Routes = express.Router();
 // Array of module routes
@@ -38,6 +38,10 @@ const moduleRouts = [
   {
     path: '/user-subscriptions',
     router: userSubscriptionRoutes
+  },
+  {
+    path: '/notifications',
+    router: notificationRouter
   }
 ];
 
