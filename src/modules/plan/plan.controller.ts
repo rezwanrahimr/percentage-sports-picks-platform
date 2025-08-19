@@ -1,12 +1,23 @@
 import catchAsync from "../../util/catchAsync";
+import NotificationHelper from "../notifications/notification-helper.service";
 import planServices from "./plan.service";
 
 // plane controller
 const createPlan = catchAsync(async (req, res) => {
+    const adminId = req.user?.id;
+    if (!adminId) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized: Admin ID missing"
+        });
+    }
     const data = req.body;
-    console.log("Creating plan with data:", data);
-
     const result = await planServices.createPlan(data);
+
+    if (result) {
+        await NotificationHelper.notifyNewSubscriptionPlan(result, adminId);
+    }
+
     res.status(201).json({
         success: true,
         message: "Plan created successfully",

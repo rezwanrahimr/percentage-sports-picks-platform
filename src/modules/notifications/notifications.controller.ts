@@ -244,8 +244,6 @@ class NotificationController {
   sendCustomNotification = catchAsync(async (req: SendNotificationRequest, res: Response<ApiResponse>): Promise<void> => {
     const { title, body, type = 'both', category = 'custom', recipients, metadata } = req.body;
     const sentBy = req.user?.id;
-    // const sentBy = '6895ce9a68bd56f92089f162';
-    console.log(req.user);
 
     if (!sentBy) {
       res.status(401).json({
