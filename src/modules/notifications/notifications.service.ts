@@ -34,7 +34,7 @@ class NotificationService {
       if (recipients && recipients.length > 0) {
         targetUsers = await UserModel.find({ _id: { $in: recipients } });
       } else {
-        targetUsers = await UserModel.find({ isActive: true });
+        targetUsers = await UserModel.find({ isPushNotification: true, isEmailNotification: true });
       }
 
       if (targetUsers.length === 0) {
@@ -49,7 +49,6 @@ class NotificationService {
         user.isPushNotification
       );
 
-      console.log('test', pushRecipients);
 
       // Save notification to database
       const notification = new NotificationModel({
