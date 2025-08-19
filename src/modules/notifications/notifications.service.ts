@@ -132,7 +132,7 @@ class NotificationService {
     }
   }
 
-  // Send push notifications
+  // Send push notifications with detailed error logging
   private async sendPushNotifications(users: any[], title: string, body: string, metadata: any): Promise<void> {
     const userIds = users.map(user => user._id);
     const devices = await UserDeviceModel.find({
@@ -140,7 +140,13 @@ class NotificationService {
       isActive: true
     });
 
-    if (devices.length === 0) return;
+    console.log(`📱 Found ${devices.length} devices for ${userIds.length} users`);
+    console.log('📱 Device tokens:', devices.map(d => d.deviceToken));
+
+    if (devices.length === 0) {
+      console.log('📱 No devices found, skipping push notifications');
+      return;
+    }
 
     const tokens = devices.map(device => device.deviceToken);
 
@@ -150,9 +156,14 @@ class NotificationService {
         data: {
           type: metadata.type || 'general',
           category: metadata.category || 'notification',
-          ...metadata
+          // Convert all metadata values to strings (FCM requirement)
+          ...Object.fromEntries(
+            Object.entries(metadata).map(([key, value]) => [key, String(value)])
+          )
         }
       };
+
+      console.log('📱 Sending message:', JSON.stringify(message, null, 2));
 
       const response = await admin.messaging().sendEachForMulticast({
         tokens,
@@ -161,19 +172,20 @@ class NotificationService {
 
       console.log(`📱 Push notification result: ${response.successCount} success, ${response.failureCount} failed`);
 
-      // Clean up invalid tokens
+      // Log detailed error information
       if (response.failureCount > 0) {
         const invalidTokens: string[] = [];
         response.responses.forEach((resp, index) => {
-          if (!resp.success) {
+          if (!resp.success && resp.error) {
+            console.error(`❌ Token ${tokens[index]} failed:`, resp.error.code, resp.error.message);
             invalidTokens.push(tokens[index]);
           }
         });
 
-        if (invalidTokens.length > 0) {
-          await UserDeviceModel.deleteMany({ deviceToken: { $in: invalidTokens } });
-          console.log(`🗑️ Cleaned up ${invalidTokens.length} invalid tokens`);
-        }
+        // if (invalidTokens.length > 0) {
+        //   await UserDeviceModel.deleteMany({ deviceToken: { $in: invalidTokens } });
+        //   console.log(`🗑️ Cleaned up ${invalidTokens.length} invalid tokens`);
+        // }
       }
     } catch (error) {
       console.error('Error sending push notifications:', error);
