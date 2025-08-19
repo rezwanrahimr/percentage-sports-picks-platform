@@ -43,11 +43,13 @@ class NotificationService {
 
       // Filter users based on their notification preferences
       const emailRecipients = targetUsers.filter(user =>
-        (type === 'email' || type === 'both') && user.isEmailNotification
+        user.isEmailNotification
       );
       const pushRecipients = targetUsers.filter(user =>
-        (type === 'push' || type === 'both') && user.isPushNotification
+        user.isPushNotification
       );
+
+      console.log('test', pushRecipients);
 
       // Save notification to database
       const notification = new NotificationModel({
