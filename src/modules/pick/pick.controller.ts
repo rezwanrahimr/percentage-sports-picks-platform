@@ -1,11 +1,36 @@
 import catchAsync from "../../util/catchAsync";
+import NotificationHelper from "../notifications/notification-helper.service";
 import pickServices from "./pick.service";
 
 /* sport type */
 const createSportType = catchAsync(async (req, res) => {
     const { title } = req.body;
+    const adminId = req.user?.id;
+
+    if (!adminId) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized: Admin ID missing"
+        });
+    }
 
     const result = await pickServices.createSportType(title);
+
+    // send notification
+    if (result?._id && typeof adminId === "string") {
+        try {
+            const notificationResult = await NotificationHelper.notifySystemAnnouncement(
+                `New Sport Type Created`,
+                `A new sport type has been created: ${result.title}`,
+                adminId
+            );
+        } catch (error) {
+            console.error("❌ NotificationHelper error:", error);
+        }
+    } else {
+        console.log("⚠️ No result._id found or adminId is not a string, skipping notification");
+    }
+
     res.status(201).json({
         success: true,
         message: "Sport type created successfully",
@@ -70,8 +95,33 @@ const deleteSportType = catchAsync(async (req, res) => {
 /* league */
 const createLeague = catchAsync(async (req, res) => {
     const { title } = req.body;
+    const adminId = req.user?.id;
+
+    if (!adminId) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized: Admin ID missing"
+        });
+    }
 
     const result = await pickServices.createLeague(title);
+
+    // send notification
+    if (result?._id && typeof adminId === "string") {
+        try {
+            const notificationResult = await NotificationHelper.notifySystemAnnouncement(
+                `New League Created`,
+                `A new league has been created: ${result.title}`,
+                adminId
+            );
+        } catch (error) {
+            console.error("❌ NotificationHelper error:", error);
+        }
+    } else {
+        console.log("⚠️ No result._id found or adminId is not a string, skipping notification");
+    }
+
+
     res.status(201).json({
         success: true,
         message: "League created successfully",
@@ -136,8 +186,32 @@ const deleteLeague = catchAsync(async (req, res) => {
 /* teaser types */
 const createTeaserType = catchAsync(async (req, res) => {
     const { title } = req.body;
+    const adminId = req.user?.id;
+
+    if (!adminId) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized: Admin ID missing"
+        });
+    }
 
     const result = await pickServices.createTeaserType(title);
+
+    // send notification
+    if (result?._id && typeof adminId === "string") {
+        try {
+            const notificationResult = await NotificationHelper.notifySystemAnnouncement(
+                `New Teaser Type Created`,
+                `A new teaser type has been created: ${result.title}`,
+                adminId
+            );
+        } catch (error) {
+            console.error("❌ NotificationHelper error:", error);
+        }
+    } else {
+        console.log("⚠️ No result._id found or adminId is not a string, skipping notification");
+    }
+
     res.status(201).json({
         success: true,
         message: "Teaser type created successfully",
@@ -203,11 +277,30 @@ const deleteTeaserType = catchAsync(async (req, res) => {
 /* team */
 const createTeam = catchAsync(async (req, res) => {
     const { name } = req.body;
+    const adminId = req.user?.id;
+
     const imgFile = req.files && (req.files as any).images
         ? (req.files as any).images[0]
         : null;
 
     const result = await pickServices.createTeam(name, imgFile);
+
+    // send notification
+    if (result?._id && typeof adminId === "string") {
+        try {
+            const notificationResult = await NotificationHelper.notifySystemAnnouncement(
+                `New Team Created`,
+                `A new team has been created: ${result.name}`,
+                adminId
+            );
+        } catch (error) {
+            console.error("❌ NotificationHelper error:", error);
+        }
+    } else {
+        console.log("⚠️ No result._id found or adminId is not a string, skipping notification");
+    }
+
+
     res.status(201).json({
         success: true,
         message: "Team created successfully",
