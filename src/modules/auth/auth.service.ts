@@ -1,8 +1,6 @@
-import bcrypt from 'bcrypt';
 import { config } from '../../config';
 import authUtill from './auth.utill';
 import { UserModel } from '../user/user.model';
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import { sendEmail } from '../../util/sendEmail';
 import userServices from '../user/user.service';
 import { OAuth2Client } from 'google-auth-library';

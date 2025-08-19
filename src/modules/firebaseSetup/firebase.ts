@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import * as serviceAccount from './inprep-ai-c0450-firebase-adminsdk-fbsvc-4ed953df39.json';
+import * as serviceAccount from './richboymarquis-2f430-firebase-adminsdk-fbsvc-315c35fb18.json';
 
 // Check if Firebase is already initialized
 if (!admin.apps.length) {
