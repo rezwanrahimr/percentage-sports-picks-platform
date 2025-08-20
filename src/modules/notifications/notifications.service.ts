@@ -195,12 +195,13 @@ class NotificationService {
   // Register device token
   async registerDeviceToken(userId: string, deviceToken: string, platform: 'ios' | 'android'): Promise<any> {
     try {
-      let userDevice = await UserDeviceModel.findOne({ deviceToken });
+      let userDevice = await UserDeviceModel.findOne({ userId: new mongoose.Types.ObjectId(userId) });
 
       if (userDevice) {
         userDevice.userId = new mongoose.Types.ObjectId(userId);
         userDevice.platform = platform;
         userDevice.isActive = true;
+        userDevice.deviceToken = deviceToken;
         userDevice.lastUsed = new Date();
         await userDevice.save();
       } else {
