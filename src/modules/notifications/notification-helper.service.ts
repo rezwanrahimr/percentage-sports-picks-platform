@@ -93,12 +93,14 @@ class NotificationHelper {
       type: 'both',
       category: 'subscription',
       sentBy: userId,
+      recipients: [userId],
       metadata: {
         userId,
         planId
       }
     });
   }
+
 }
 
 export default NotificationHelper;

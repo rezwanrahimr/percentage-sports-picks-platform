@@ -110,6 +110,7 @@ class NotificationService {
     }
   }
 
+
   // Send email notifications
   private async sendEmailNotifications(users: any[], title: string, body: string, metadata: any): Promise<void> {
     for (const user of users) {
