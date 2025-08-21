@@ -3,6 +3,7 @@ import paymentService from "./payment.service";
 import { stripe } from "../../config";
 import { UserSubscriptionModel } from "../userSubscription/userSubscription.model";
 import catchAsync from "../../util/catchAsync";
+import NotificationHelper from "../notifications/notification-helper.service";
 
 const createCheckout = catchAsync(async (req: Request, res: Response) => {
   try {
@@ -79,6 +80,7 @@ export const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
 
         await sub.save();
         console.log("Subscription/One-time payment activated for user:", sub.userId.toString());
+        await NotificationHelper.notifyUserPlanActivation(sub.userId.toString(), sub.planId.toString());
         break;
       }
 

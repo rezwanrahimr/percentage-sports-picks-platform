@@ -83,6 +83,22 @@ class NotificationHelper {
       }
     });
   }
+
+
+  //notifyUserPlanActivation
+  static async notifyUserPlanActivation(userId: string, planId: string) {
+    return await notificationService.sendNotification({
+      title: "Your Subscription Plan is Active!",
+      body: `Your subscription plan (ID: ${planId}) is now active. Enjoy the benefits!`,
+      type: 'both',
+      category: 'subscription',
+      sentBy: userId,
+      metadata: {
+        userId,
+        planId
+      }
+    });
+  }
 }
 
 export default NotificationHelper;
