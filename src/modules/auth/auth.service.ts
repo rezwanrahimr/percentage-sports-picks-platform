@@ -6,6 +6,7 @@ import userServices from '../user/user.service';
 import { OAuth2Client } from 'google-auth-library';
 import appleSignin from "apple-signin-auth";
 import VerificationCodeModel from './verificationCode.model';
+import NotificationHelper from '../notifications/notification-helper.service';
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -72,6 +73,60 @@ const logIn = async (
 
     if (!newUserResponse.data) {
       throw new Error(newUserResponse.message || 'User creation failed');
+    }
+
+
+    const sendWelcomeNotification = await NotificationHelper.notifyUserWelcome(
+      newUserResponse?.data?._id?.toHexString());
+
+    if (email) {
+      // HTML email content
+      const welcomeEmailHTML = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background-color: #4CAF50; color: white; text-align: center; padding: 20px; border-radius: 5px 5px 0 0; }
+              .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
+              .welcome-text { font-size: 18px; margin-bottom: 20px; }
+              .user-info { background-color: white; padding: 15px; border-radius: 5px; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 30px; color: #666; }
+              .btn { background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>Welcome to Our Platform!</h1>
+              </div>
+              <div class="content">
+                <p class="welcome-text">Hello ${email?.split('@')[0] || 'there'}!</p>
+                <p>We're excited to have you join our community. Your account has been successfully created.</p>
+                
+                <div class="user-info">
+                  <h3>Account Details:</h3>
+                  <p><strong>Email:</strong> ${email}</p>
+                  <p><strong>Name:</strong> ${email?.split('@')[0] || 'Not provided'}</p>
+                  <p><strong>Account Created:</strong> ${new Date().toLocaleDateString()}</p>
+                </div>
+                
+                <p>You can now start exploring all the features our platform has to offer.</p>
+                
+                <p>If you have any questions, feel free to reach out to our support team.</p>
+                
+                <div class="footer">
+                  <p>Thank you for choosing our platform!</p>
+                  <p><small>This is an automated email. Please do not reply to this message.</small></p>
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+      await sendEmail(email, "Welcome to Our Platform!", welcomeEmailHTML);
     }
 
 
