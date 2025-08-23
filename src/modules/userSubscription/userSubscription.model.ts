@@ -2,8 +2,8 @@ import mongoose, { Schema } from "mongoose";
 import { TUserSubscription } from "./userSubscription.interface";
 
 const userSubscriptionSchema = new Schema<TUserSubscription>({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  planId: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
+  userId: { type: Schema.Types.ObjectId, ref: "UserCollection", required: true },
+  planId: { type: Schema.Types.ObjectId, ref: "PlanCollection", required: true },
   // Stripe info
   stripeCustomerId: { type: String },
   stripeSubscriptionId: { type: String },
@@ -20,7 +20,7 @@ const userSubscriptionSchema = new Schema<TUserSubscription>({
     enum: ["active", "canceled", "pending", "completed", "inactive"],
     default: "inactive"
   },
-  promoCodeId: { type: Schema.Types.ObjectId, ref: "PromoCode", default: null },
+  promoCodeId: { type: Schema.Types.ObjectId, ref: "PromoCodeCollection", default: null },
 
 }, { timestamps: true });
 
