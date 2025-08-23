@@ -1,4 +1,5 @@
 import notificationService from '../notifications/notifications.service';
+import { PlanModel } from '../plan/plan.model';
 
 class NotificationHelper {
   // Notification for new subscription plan
@@ -87,9 +88,10 @@ class NotificationHelper {
 
   //notifyUserPlanActivation
   static async notifyUserPlanActivation(userId: string, planId: string) {
+    const getPlan = await PlanModel.findById(planId);
     return await notificationService.sendNotification({
       title: "Your Subscription Plan is Active!",
-      body: `Your subscription plan (ID: ${planId}) is now active. Enjoy the benefits!`,
+      body: `Your subscription plan (ID: ${getPlan?.name}) is now active. Enjoy the benefits!`,
       type: 'both',
       category: 'subscription',
       sentBy: userId,
@@ -97,6 +99,21 @@ class NotificationHelper {
       metadata: {
         userId,
         planId
+      }
+    });
+  }
+
+  // user welcome
+  static async notifyUserWelcome(userId: string) {
+    return await notificationService.sendNotification({
+      title: "Welcome to Our Platform!",
+      body: `Hi there! We're excited to have you on board.`,
+      type: 'both',
+      category: 'welcome',
+      sentBy: userId,
+      recipients: [userId],
+      metadata: {
+        userId
       }
     });
   }
