@@ -42,7 +42,6 @@ const sendVerificationEmail = async (email: string) => {
   };
 }
 
-
 const logIn = async (
   email: string,
   code: string
@@ -161,7 +160,6 @@ const logIn = async (
   return { approvalToken, refreshToken, updatedUser: user };
 };
 
-
 const googleLogin = async (name: string, email: string) => {
 
   if (!email) {
@@ -169,6 +167,7 @@ const googleLogin = async (name: string, email: string) => {
   }
 
   let user = await UserModel.findOne({ email, provider: 'google' });
+
 
   if (!user) {
     user = await UserModel.create({
