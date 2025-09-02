@@ -17,12 +17,53 @@ const sendVerificationEmail = async (email: string) => {
   const subject = "Your Email Verification Code";
 
   const html = `
-    <div>
-      <h2>Email Verification</h2>
-      <p>Your code is:</p>
-      <p style="font-size: 24px; font-weight: bold;">${verificationCode}</p>
-      <p>This will expire in 10 minutes.</p>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Email Verification</title>
+  <style>
+    body { margin:0; padding:0; background:#f4f6f8; color:#111827; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; }
+    .wrap { width:100%; padding:24px 12px; }
+    .card { max-width:640px; margin:0 auto; background:#ffffff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.06); overflow:hidden; }
+    .header { background:linear-gradient(135deg,#6a5af9,#22d3ee); color:#fff; text-align:center; padding:28px 24px; }
+    .header h1 { margin:0; font-size:24px; }
+    .content { padding:32px 28px; }
+    .muted { color:#6b7280; }
+    .code { display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace; font-size:32px; font-weight:800; letter-spacing:6px; background:#f1f5f9; color:#111827; padding:12px 18px; border-radius:10px; border:1px solid #e5e7eb; }
+    .footer { padding:18px 24px; text-align:center; color:#9ca3af; font-size:12px; }
+    .preheader { display:none; visibility:hidden; opacity:0; color:transparent; height:0; width:0; overflow:hidden; }
+    @media (prefers-color-scheme: dark) {
+      body { background:#0b1020; color:#e5e7eb; }
+      .card { background:#111827; }
+      .code { background:#0b1020; color:#e5e7eb; border-color:#1f2937; }
+      .muted, .footer { color:#9ca3af; }
+    }
+  </style>
+</head>
+<body>
+  <span class="preheader">Your verification code is ${verificationCode}. It expires in 5 minutes.</span>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <h1>Verify your email</h1>
+        <p style="margin:6px 0 0; opacity:.95;">Use the code below to continue</p>
+      </div>
+      <div class="content">
+        <p class="muted">Enter this 6‑digit code in the app. This code expires in 5 minutes.</p>
+        <div style="margin:16px 0 24px;">
+          <span class="code">${verificationCode}</span>
+        </div>
+        <p class="muted" style="margin-top:0;">If you didn’t request this, you can safely ignore this email.</p>
+      </div>
+      <div class="footer">
+        <p>© ${new Date().getFullYear()} All rights reserved.</p>
+      </div>
     </div>
+  </div>
+</body>
+</html>
   `;
 
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
