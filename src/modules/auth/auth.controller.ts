@@ -40,8 +40,8 @@ const googleLogin = catchAsync(async (req, res) => {
 });
 
 const appleLogin = catchAsync(async (req, res) => {
-  const { idToken } = req.body;
-  const result = await authServices.appleLogin(idToken);
+  const { name, email } = req.body;
+  const result = await authServices.appleLogin(name, email);
   res.status(200).json({
     message: 'Apple Login Successful',
     approvalToken: result.approvalToken,

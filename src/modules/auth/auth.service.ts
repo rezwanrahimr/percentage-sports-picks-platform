@@ -244,23 +244,24 @@ const googleLogin = async (name: string, email: string) => {
 
 }
 
-const appleLogin = async (idToken: string) => {
-  const decoded = await appleSignin.verifyIdToken(idToken, {
-    audience: process.env.APPLE_CLIENT_ID,
-    ignoreExpiration: true
-  });
+const appleLogin = async (name: string, email: string) => {
+  if (!email) {
+    throw new Error('Email is required for Apple login');
+  }
 
-  const { sub, email } = decoded;
+  let user = await UserModel.findOne({ email, provider: 'apple' });
 
-  let user = await UserModel.findOne({ email });
 
   if (!user) {
     user = await UserModel.create({
-      name: "",
+      name: name || email.split('@')[0],
       email,
-      provider: "apple",
-      providerId: sub
+      provider: 'apple',
+      isLoggedIn: true
     });
+  } else {
+    user.isLoggedIn = true;
+    await user.save();
   }
 
   const tokenizeData = {
