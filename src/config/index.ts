@@ -14,8 +14,13 @@ const config = {
     jwt_refresh_Token_secret: process.env.JWT_REFRESHTOKEN_SECRET as string,
     rifresh_expairsIn: process.env.REFRESH_TOKEN_EXPAIRS_IN as string,
 
-    company_gmail: process.env.COMPANY_GMAIL as string,
-    gmail_app_password: process.env.GMAIL_APP_PASSWORD as string,
+    // company_gmail: process.env.COMPANY_GMAIL as string,
+    // gmail_app_password: process.env.GMAIL_APP_PASSWORD as string,
+
+    sendgrid_api_key: process.env.SENDGRID_API_KEY || '',
+    company_email: process.env.COMPANY_EMAIL || 'noreply@yourapp.com',
+    company_name: process.env.COMPANY_NAME || 'Your App Name',
+
 
     bcrypt_salt: process.env.BCRYPT_SALT as string,
 
