@@ -1,5 +1,6 @@
 import { stripe } from "../../config";
 import idConverter from "../../util/idConvirter";
+import { PickModel } from "../pick/pick.model";
 import { TPlan } from "./plan.interface";
 import { PlanModel } from "./plan.model";
 
@@ -40,7 +41,10 @@ const createPlan = async (data: Partial<TPlan>) => {
             stripePriceId: price.id,
         };
 
-        const plan = await PlanModel.create(planData);
+        const getServices = await PickModel.find();
+        const serviceIds = getServices?.map(service => idConverter(service._id.toString()));
+
+        const plan = await PlanModel.create({ ...planData, services: serviceIds });
 
         return plan;
     } catch (error) {
