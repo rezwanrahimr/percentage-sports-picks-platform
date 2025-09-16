@@ -26,7 +26,7 @@ const createUser = async (payload: Partial<TUser>, image?: Express.Multer.File) 
 
       if (image) {
         // Assuming uploadToCloudinary is your function for uploading to Cloudinary
-        imageUrl = await uploadToCloudinary(image.path, 'profile/images');
+        imageUrl = await uploadToCloudinary(image.buffer, 'profile/images', image.originalname);
       }
 
       user = new UserModel({ ...payload, img: imageUrl });
@@ -116,9 +116,9 @@ const updateUser = async (userId: string, userData: Partial<TUser>, image?: Expr
     throw new Error("Email and role cannot be updated");
   }
 
-  let imageUrl = null;
+  let imageUrl: string | undefined = undefined;
   if (image) {
-    imageUrl = await uploadToCloudinary(image.path, 'profile/images');
+    imageUrl = await uploadToCloudinary(image.buffer, 'profile/images', image.originalname) as string;
     userData.img = imageUrl;
   }
 
