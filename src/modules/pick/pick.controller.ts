@@ -293,21 +293,39 @@ const createTeam = catchAsync(async (req, res) => {
                 `A new team has been created: ${result.name}`,
                 adminId
             );
+
+            res.status(201).json({
+                success: true,
+                message: "Team created successfully",
+                data: {
+                    team: result
+                }
+            });
         } catch (error) {
             console.error("❌ NotificationHelper error:", error);
+
+            res.status(201).json({
+                success: true,
+                message: "Team created successfully, but notification failed",
+                data: {
+                    team: result
+                }
+            });
         }
     } else {
         console.log("⚠️ No result._id found or adminId is not a string, skipping notification");
+
+        res.status(201).json({
+            success: true,
+            message: "Team created successfully",
+            data: {
+                team: result
+            }
+        });
     }
 
 
-    res.status(201).json({
-        success: true,
-        message: "Team created successfully",
-        data: {
-            team: result
-        }
-    });
+
 })
 
 const updateTeam = catchAsync(async (req, res) => {

@@ -1,5 +1,5 @@
 import idConverter from "../../util/idConvirter";
-import { uploadToCloudinary } from "../../util/uploadImgToCloudinary";
+import { uploadToCloudinary, deleteFromCloudinary } from "../../util/uploadImgToCloudinary";
 import { LeagueModel, PickModel, SportTypeModel, TeamModel, TeaserTypeModel } from "./pick.model"
 
 /* sport type */
@@ -282,8 +282,10 @@ const createTeam = async (name: string, image: Express.Multer.File) => {
         if (isExist) {
             throw new Error("Team already exists");
         }
-        const result = await uploadToCloudinary(image.path, 'profile/images');
+        const result = await uploadToCloudinary(image.buffer, 'profile/images', image.originalname);
+        console.log("Cloudinary upload result:", result);
         const team = await TeamModel.create({ name, image: result });
+        console.log("Created team:", team);
         return team;
     } catch (error) {
         if (error instanceof Error) {
@@ -303,7 +305,19 @@ const updateTeam = async (id: string, name: string, image: Express.Multer.File) 
         }
 
         if (image) {
-            const result = await uploadToCloudinary(image.path, 'profile/images');
+            // Delete old image from Cloudinary if it exists
+            if (isExist.image) {
+                try {
+                    await deleteFromCloudinary(isExist.image);
+                    console.log('Old team image deleted from Cloudinary');
+                } catch (deleteError) {
+                    console.error('Failed to delete old image from Cloudinary:', deleteError);
+                    // Don't throw error here, continue with update
+                }
+            }
+
+            // Upload new image
+            const result = await uploadToCloudinary(image.buffer, 'profile/images', image.originalname);
             const team = await TeamModel.findByIdAndUpdate(idConvert, { name, image: result }, { new: false });
             return team;
         } else {
@@ -358,6 +372,17 @@ const deleteTeam = async (id: string) => {
         const isExist = await TeamModel.findById(idConvert);
         if (!isExist) {
             throw new Error("Team does not exist");
+        }
+
+        // Delete image from Cloudinary if it exists
+        if (isExist.image) {
+            try {
+                await deleteFromCloudinary(isExist.image);
+                console.log('Team image deleted from Cloudinary');
+            } catch (deleteError) {
+                console.error('Failed to delete image from Cloudinary:', deleteError);
+                // Don't throw error here, continue with team deletion
+            }
         }
 
         const team = await TeamModel.findByIdAndDelete(idConvert);

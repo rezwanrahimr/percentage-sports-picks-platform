@@ -1,24 +1,10 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs/promises";
 import { v2 as cloudinary } from "cloudinary";
-import {config} from "../config";
+import { config } from "../config";
 
-// Delete file after upload
-const deleteFile = async (filePath: string) => {
-  try {
-    await fs.unlink(filePath);
-  } catch (err) {
-    if (err instanceof Error) {
-      console.error(`Error deleting file: ${err.message}`);
-    } else {
-      console.error(`Error deleting file: ${String(err)}`);
-    }
-  }
-};
-
-// Upload to Cloudinary
-export const uploadToCloudinary = async (filePath: string, folder: string) => {
+// Upload to Cloudinary directly from buffer
+export const uploadToCloudinary = async (buffer: Buffer, folder: string, originalname: string) => {
   cloudinary.config({
     cloud_name: config.cloudinary_name,
     api_key: config.cloudinary_api_key,
@@ -30,20 +16,78 @@ export const uploadToCloudinary = async (filePath: string, folder: string) => {
   console.log(`api_secret: ${config.cloudinary_api_secret}`);
 
   try {
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder,
-      resource_type: "auto", // allows images, pdf, docs
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: "auto",
+          public_id: `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(originalname)}`,
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(new Error("File upload failed"));
+          } else {
+            resolve(result?.secure_url);
+          }
+        }
+      ).end(buffer);
     });
-    await deleteFile(filePath);
-    return result.secure_url;
   } catch (error) {
     console.error("Cloudinary upload error:", error);
     throw new Error("File upload failed");
   }
 };
 
+// Delete from Cloudinary using public_id extracted from URL
+export const deleteFromCloudinary = async (imageUrl: string) => {
+  cloudinary.config({
+    cloud_name: config.cloudinary_name,
+    api_key: config.cloudinary_api_key,
+    api_secret: config.cloudinary_api_secret,
+  });
+
+  try {
+    console.log('Attempting to delete image:', imageUrl);
+    
+    // Extract public_id from Cloudinary URL
+    // URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/public_id.jpg
+    const urlParts = imageUrl.split('/');
+    
+    // Find the index of 'upload' in the URL
+    const uploadIndex = urlParts.indexOf('upload');
+    if (uploadIndex === -1) {
+      throw new Error('Invalid Cloudinary URL format');
+    }
+    
+    // Get everything after 'upload' and version (v1234567890)
+    const pathAfterUpload = urlParts.slice(uploadIndex + 2); // Skip 'upload' and version
+    
+    // Join the path and remove file extension
+    const fullPath = pathAfterUpload.join('/');
+    const publicId = fullPath.replace(/\.[^/.]+$/, ""); // Remove file extension
+    
+    console.log('Extracted public_id:', publicId);
+    
+    const result = await cloudinary.uploader.destroy(publicId);
+    console.log('Cloudinary deletion result:', result);
+    
+    if (result.result === 'ok') {
+      console.log('✅ Image successfully deleted from Cloudinary');
+    } else {
+      console.log('⚠️ Image deletion status:', result.result);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("Cloudinary deletion error:", error);
+    throw new Error("Image deletion failed");
+  }
+};
+
 // Multer config
-const storage = multer.diskStorage({
+const storage = multer.memoryStorage();
+/* const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     const uploadPath = path.join(process.cwd(), "uploads");
     await fs.mkdir(uploadPath, { recursive: true });
@@ -53,7 +97,7 @@ const storage = multer.diskStorage({
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
   },
-});
+}); */
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedMimes = [
