@@ -185,7 +185,3 @@ Required environment variables:
 ## 📄 License
 
 This project is proprietary software.
-
-## 👨‍💻 Author
-
-Rezwan Rahim" 
