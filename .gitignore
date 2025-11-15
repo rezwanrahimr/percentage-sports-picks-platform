@@ -4,3 +4,4 @@ dist
 note.txt
 .env.example
 uploads/
+src/modules/firebaseSetup/*.json
